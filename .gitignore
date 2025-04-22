@@ -1,0 +1,18 @@
+# Fichiers d'environnement
+.env
+.env.*
+
+# Dossiers de dépendances
+/node_modules
+../node_modules
+
+# Fichiers IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs
+*.log
