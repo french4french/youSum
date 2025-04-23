@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     async function summarizeWithGemini(transcription, videoInfo) {
-        updateLoadingText('Génération du résumé avec Gemini...');
+        updateLoadingText('Génération du résumé avec l\'IA...');
         updateProgressBar(85);
         
         // Limit transcription size if needed
