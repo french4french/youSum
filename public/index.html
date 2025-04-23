@@ -3,138 +3,356 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Summary</title>
+    <meta name="description" content="Résumez n'importe quelle vidéo YouTube en quelques secondes grâce à l'IA. Économisez du temps avec des résumés clairs et structurés.">
+    <title>YouSummarize - Résumés Vidéo YouTube par IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Link to Google Fonts (Inter for sans-serif, Playfair Display for serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
     <link rel="icon" type="image/x-icon" href="./assets/images/favicon.png">
-
-
+    <style>
+        :root {
+            --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            --bg-color: #f0eee6;
+            --card-bg-color: #ffffff;
+            --text-color-main: #333333;
+            --text-color-subtle: #656358;
+            --border-color: #d0cec2;
+            --accent-color: #4f46e5; /* Indigo */
+            --red-accent: #dc2626; /* Tailwind red-600 */
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-sans);
+            color: var(--text-color-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .font-serif { font-family: var(--font-serif); }
+        .font-sans { font-family: var(--font-sans); }
+        .bg-card { background-color: var(--card-bg-color); }
+        .text-main { color: var(--text-color-main); }
+        .text-subtle { color: var(--text-color-subtle); }
+        .border-subtle { border-color: var(--border-color); }
+        .accent { color: var(--accent-color); }
+        .bg-accent { background-color: var(--accent-color); }
+        .text-red-accent { color: var(--red-accent); }
+        .hover-gradient { transition: background-color 0.2s ease-in-out; }
+        .hover-gradient:hover { background-image: linear-gradient(to bottom, #F0EEE5, #E9E5D8); }
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        details summary .chevron { transition: transform 0.2s ease-in-out; }
+        details[open] summary .chevron { transform: rotate(180deg); }
+        .progress-bar { background-color: var(--accent-color); height: 100%; transition: width 0.5s ease-in-out; }
+        .loading-spinner { border: 4px solid #f3f4f6; border-top: 4px solid var(--accent-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .prose { color: var(--text-color-main); }
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose strong { color: var(--text-color-main); font-weight: 600; }
+        .prose a { color: var(--accent-color); text-decoration: none; font-weight: 500; }
+        .prose a:hover { text-decoration: underline; }
+        .prose code { color: var(--text-color-subtle); background-color: #f5f5f4; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.9em;}
+        .prose pre { background-color: #f5f5f4; color: var(--text-color-subtle); padding: 1em; border-radius: 8px; overflow-x: auto;}
+    </style>
 </head>
-<body>
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-    <!-- Header -->
-    <header class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">YouTube Summary</h1>
-        <p class="text-gray-600">Résumez n'importe quelle vidéo YouTube avec l'IA</p>
-    </header>
+<body class="text-main">
+<div class="shadow-lg bg-card m-2 rounded-2xl relative">
+    <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
 
-    <!-- Main content -->
-    <main>
-        <!-- Input form -->
-        <div class="card p-6 mb-6">
-            <form id="youtubeForm" class="space-y-4">
-                <div class="space-y-2">
-                    <label for="youtubeUrl" class="font-medium text-gray-700 flex items-center gap-2">
-                        <i class="fas fa-link text-gray-500"></i>
-                        URL de la vidéo YouTube
-                    </label>
-                    <div class="flex">
+        <!-- Navigation with "Star us" CTA -->
+        <nav class="w-full flex justify-between items-center mb-16 md:mb-24">
+            <div class="flex gap-2 items-center">
+                <img alt="YouSummarize Logo" width="36" height="36" src="./assets/images/logo.svg"/>
+                <span class="font-semibold text-lg text-main">YouSummarize</span>
+            </div>
+            <!-- Updated GitHub CTA Button -->
+            <a href="https://github.com/Jp-fix/youSum"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="github-star-btn px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover-gradient border border-subtle shadow-sm w-fit text-sm transition duration-150">
+            <i class="fab fa-github text-lg text-subtle"></i>
+            <span class="py-0 shrink-0 font-medium text-subtle">Star on GitHub</span>
+            </a>
+        </nav>
+
+        <main class="flex flex-col w-full max-w-full gap-16 md:gap-24 items-center my-auto">
+
+            <!-- Hero Section -->
+            <div class="flex flex-col items-center text-center w-full max-w-3xl">
+                <h1 class="font-serif text-5xl md:text-7xl lg:text-8xl font-bold text-main -tracking-[2px] md:-tracking-[4px]" style="line-height: 1.1;">
+                    Résumez YouTube avec l'IA
+                </h1>
+                <p class="mt-6 text-lg md:text-xl text-subtle max-w-xl">
+                    Collez un lien YouTube, obtenez un résumé clair et concis en quelques secondes. Gagnez du temps, comprenez plus vite.
+                </p>
+                <p class="mt-5 text-sm text-subtle font-semibold bg-[#E9E5D8] px-3 py-1 rounded-full inline-block border border-subtle/50">
+                    Gratuit · Rapide · Aucune Inscription
+                </p>
+            </div>
+
+            <!-- Input Form Card - CENTRAL FOCUS -->
+            <div id="form-section" class="bg-card p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-3xl border border-subtle">
+                <form id="youtubeForm" class="space-y-5">
+                    <div>
+                        <label for="youtubeUrl" class="text-base font-medium text-main flex items-center gap-2 mb-2">
+                            <i class="fas fa-link accent"></i>
+                            Collez votre lien YouTube ici
+                        </label>
                         <input
-                                type="text"
+                                type="url"
                                 id="youtubeUrl"
-                                class="input-field px-4 py-2 w-full"
+                                class="px-4 py-3 w-full border-2 border-subtle rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none text-base transition duration-200 bg-white shadow-inner"
                                 placeholder="https://www.youtube.com/watch?v=..."
                                 required
+                                autofocus
                         >
+                        <p class="text-xs text-subtle mt-2">Fonctionne avec les vidéos publiques disposant de sous-titres.</p>
                     </div>
-                    <p class="text-sm text-gray-500">Collez l'URL d'une vidéo YouTube pour en générer un résumé</p>
-                </div>
 
-                <div class="flex justify-between items-center">
-                    <button
-                            type="submit"
-                            id="summarizeBtn"
-                            class="btn-primary px-4 py-2 rounded-md flex items-center gap-2"
-                    >
-                        <i class="fas fa-magic"></i>
-                        Résumer la vidéo
-                    </button>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+                        <button
+                                type="submit"
+                                id="summarizeBtn"
+                                class="w-full sm:w-auto bg-accent hover:opacity-90 text-white font-semibold text-base px-7 py-3 rounded-lg flex items-center justify-center gap-2 transition duration-200 ease-in-out shadow-lg hover:shadow-md"
+                        >
+                            <i class="fas fa-magic"></i>
+                            Générer le résumé
+                        </button>
 
-                    <div class="flex items-center gap-3">
-                        <div id="language-selector" class="flex items-center gap-2">
-                            <label for="language" class="text-sm text-gray-600">Langue:</label>
-                            <select id="language" class="input-field px-2 py-1 text-sm rounded">
+                        <div class="flex items-center justify-center sm:justify-start gap-2">
+                            <label for="language" class="text-sm text-subtle">Langue:</label>
+                            <select id="language" class="px-3 py-1.5 text-sm border border-subtle rounded-md focus:ring-accent/50 focus:border-accent text-main bg-white text-xs">
                                 <option value="fr" selected>Français</option>
                                 <option value="en">English</option>
+                                <option value="es">Español</option>
                             </select>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
+                </form>
 
-        <!-- Loading state (hidden by default) -->
-        <div id="loadingState" class="card p-6 mb-6 hidden">
-            <div class="flex flex-col items-center justify-center py-6">
-                <div class="loading-spinner mb-4"></div>
-                <p class="text-gray-600 mb-2" id="loadingText">Récupération de la transcription...</p>
-                <div class="w-full max-w-md bg-gray-200 rounded-full h-1 mt-2">
-                    <div class="progress-bar rounded-full" id="progressBar"></div>
+                <!-- Examples with Red YouTube Icon -->
+                <div class="popular-examples mt-6 pt-4 border-t border-subtle/30">
+                    <h3 class="text-xs font-medium text-subtle mb-2 text-center sm:text-left">Ou essayez avec un exemple :</h3>
+                    <div class="example-links flex flex-wrap gap-2 justify-center sm:justify-start">
+                        <button class="example-link bg-[#F0EEE5] hover:bg-[#E9E5D8] text-subtle px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 transition duration-150 border border-subtle/50" data-url="https://www.youtube.com/watch?v=oHC1230Op_b">
+                            <i class="fab fa-youtube text-red-accent text-sm"></i> Reportage Tech
+                        </button>
+                        <button class="example-link bg-[#F0EEE5] hover:bg-[#E9E5D8] text-subtle px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 transition duration-150 border border-subtle/50" data-url="https://www.youtube.com/watch?v=8drpjft8RJM">
+                            <i class="fab fa-youtube text-red-accent text-sm"></i> Conférence IA
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Video info (hidden by default) -->
-        <div id="videoInfo" class="card p-6 mb-6 hidden">
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="thumbnail-container md:w-1/3">
-                    <img id="videoThumbnail" src="" alt="Miniature de la vidéo" class="w-full rounded">
-                    <div class="thumbnail-overlay">
-                        <a id="videoLink" href="" target="_blank" class="bg-white bg-opacity-90 text-gray-800 px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium hover:bg-opacity-100 transition">
-                            <i class="fab fa-youtube text-red-600"></i>
-                            Voir sur YouTube
+            <!-- Loading State -->
+            <div id="loadingState" class="bg-card p-6 rounded-lg shadow-md mb-8 hidden max-w-md mx-auto w-full border border-subtle text-center">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="loading-spinner"></div>
+                    <p class="text-subtle font-medium" id="loadingText">Analyse en cours...</p>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-4 overflow-hidden">
+                    <div class="progress-bar rounded-full h-full" id="progressBar" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-subtle mt-2">Cela peut prendre quelques secondes.</p>
+            </div>
+
+            <!-- Video Info & Results Container -->
+            <div id="resultsContainer" class="w-full max-w-4xl mx-auto space-y-8">
+                <!-- Video Info Card -->
+                <div id="videoInfo" class="bg-card p-6 rounded-lg shadow-md hidden overflow-hidden border border-subtle">
+                    <div class="flex flex-col md:flex-row gap-5">
+                        <div class="thumbnail-container md:w-1/4 flex-shrink-0 relative rounded-md overflow-hidden border border-subtle/50">
+                            <img id="videoThumbnail" src="" alt="Miniature Vidéo" class="w-full h-auto object-cover aspect-video block">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                                <a id="videoLink" href="" target="_blank" rel="noopener noreferrer" class="bg-white/90 text-main px-3 py-1 rounded-md flex items-center gap-1.5 text-xs font-medium hover:bg-white transition shadow">
+                                    <i class="fab fa-youtube text-red-accent"></i> Voir sur YouTube
+                                </a>
+                            </div>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h2 id="videoTitle" class="text-lg lg:text-xl font-semibold mb-2 text-main leading-tight"></h2>
+                            <div class="flex items-center text-subtle mb-2 text-xs">
+                                <i class="fas fa-user-circle mr-1.5"></i> <span id="channelTitle"></span>
+                            </div>
+                            <div id="videoStats" class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-subtle">
+                                <div class="flex items-center"><i class="far fa-calendar-alt mr-1"></i> <span id="publishedDate"></span></div>
+                                <div class="flex items-center"><i class="far fa-clock mr-1"></i> <span id="videoDuration"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Card -->
+                <div id="results" class="bg-card p-6 sm:p-8 rounded-lg shadow-md hidden border border-subtle">
+                    <div class="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center mb-5 gap-4">
+                        <h2 class="text-xl md:text-2xl font-semibold text-main font-serif">Résumé Généré</h2>
+                        <div class="summary-length flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xs text-subtle mr-1">Précision:</span>
+                            <div class="btn-group flex border border-subtle rounded-md overflow-hidden shadow-sm">
+                                <button class="btn-option px-3 py-1 text-xs border-r border-subtle focus:outline-none transition duration-150 hover:bg-[#f0eee6] bg-white text-subtle" data-length="short">Court</button>
+                                <button class="btn-option px-3 py-1 text-xs border-r border-subtle focus:outline-none transition duration-150 hover:bg-[#f0eee6] active bg-[#E9E5D8] text-main font-medium" data-length="medium">Moyen</button>
+                                <button class="btn-option px-3 py-1 text-xs focus:outline-none transition duration-150 hover:bg-[#f0eee6] bg-white text-subtle" data-length="long">Détaillé</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2 mb-5">
+                        <button id="copyBtn" class="action-btn bg-[#F0EEE5] hover:bg-[#E9E5D8] text-subtle px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 transition duration-150 border border-subtle/50 shadow-sm">
+                            <i class="far fa-copy"></i> Copier
+                        </button>
+                        <button id="downloadBtn" class="action-btn bg-[#F0EEE5] hover:bg-[#E9E5D8] text-subtle px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 transition duration-150 border border-subtle/50 shadow-sm">
+                            <i class="fas fa-download"></i> PDF
+                        </button>
+                    </div>
+
+                    <div class="border-t border-subtle/50 pt-5">
+                        <div id="summaryContent" class="prose prose-sm sm:prose-base max-w-none text-main leading-relaxed">
+                            <p>Chargement du résumé...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combined How it Works & Benefits -->
+            <section class="pt-16 lg:pt-20 w-full max-w-5xl mx-auto" id="how-and-why">
+                <h2 class="font-serif text-4xl md:text-5xl font-bold text-center text-main mb-12 md:mb-16 -tracking-[1px]">Simple, Rapide, Efficace</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                    <div class="feature-card bg-card p-6 rounded-lg shadow-sm border border-subtle">
+                        <div class="mb-3 flex items-center gap-2">
+                            <span class="inline-block w-6 h-6 bg-[#E9E5D8] text-subtle rounded-full flex items-center justify-center font-semibold text-xs border border-subtle">1</span>
+                            <i class="fas fa-link text-xl accent"></i>
+                            <i class="fas fa-clock text-xl accent ml-auto"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-1 text-main">Collez & Gagnez du Temps</h3>
+                        <p class="text-sm text-subtle leading-relaxed">Entrez l'URL YouTube. Obtenez l'essentiel en quelques secondes, pas en heures.</p>
+                    </div>
+                    <div class="feature-card bg-card p-6 rounded-lg shadow-sm border border-subtle">
+                        <div class="mb-3 flex items-center gap-2">
+                            <span class="inline-block w-6 h-6 bg-[#E9E5D8] text-subtle rounded-full flex items-center justify-center font-semibold text-xs border border-subtle">2</span>
+                            <i class="fas fa-brain text-xl accent"></i>
+                            <i class="fas fa-lightbulb text-xl accent ml-auto"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-1 text-main">Analyse IA & Idées Clés</h3>
+                        <p class="text-sm text-subtle leading-relaxed">L'IA extrait les points importants. Comprenez les concepts clés facilement.</p>
+                    </div>
+                    <div class="feature-card bg-card p-6 rounded-lg shadow-sm border border-subtle">
+                        <div class="mb-3 flex items-center gap-2">
+                            <span class="inline-block w-6 h-6 bg-[#E9E5D8] text-subtle rounded-full flex items-center justify-center font-semibold text-xs border border-subtle">3</span>
+                            <i class="fas fa-file-alt text-xl accent"></i>
+                            <i class="fas fa-share-alt text-xl accent ml-auto"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-1 text-main">Résumé & Partage Facile</h3>
+                        <p class="text-sm text-subtle leading-relaxed">Recevez un texte structuré. Copiez ou téléchargez pour partager vos trouvailles.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section class="pt-16 lg:pt-20 w-full max-w-3xl mx-auto" id="faq">
+                <h2 class="font-serif text-4xl md:text-5xl font-bold text-center text-main mb-12 md:mb-16 -tracking-[1px]">Questions Fréquentes</h2>
+                <div class="space-y-5">
+                    <details class="faq-card group border-b border-subtle pb-5">
+                        <summary class="font-semibold text-lg text-main flex justify-between items-center py-2 hover:text-accent transition-colors duration-150">
+                            <span>Est-ce vraiment gratuit et illimité ?</span>
+                            <svg class="chevron w-4 h-4 text-subtle shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <p class="mt-3 text-subtle leading-relaxed text-sm pl-1">
+                            Oui, l'outil principal de résumé est totalement gratuit, sans limite de nombre de vidéos et sans nécessité de créer un compte.
+                        </p>
+                    </details>
+                    <details class="faq-card group border-b border-subtle pb-5">
+                        <summary class="font-semibold text-lg text-main flex justify-between items-center py-2 hover:text-accent transition-colors duration-150">
+                            <span>Quelles langues sont prises en charge ?</span>
+                            <svg class="chevron w-4 h-4 text-subtle shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <p class="mt-3 text-subtle leading-relaxed text-sm pl-1">
+                            Actuellement, vous pouvez générer des résumés en Français, Anglais et Espagnol. D'autres langues sont prévues.
+                        </p>
+                    </details>
+                    <details class="faq-card group border-b border-subtle pb-5">
+                        <summary class="font-semibold text-lg text-main flex justify-between items-center py-2 hover:text-accent transition-colors duration-150">
+                            <span>Les vidéos privées ou non répertoriées fonctionnent-elles ?</span>
+                            <svg class="chevron w-4 h-4 text-subtle shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </summary>
+                        <p class="mt-3 text-subtle leading-relaxed text-sm pl-1">
+                            Non, l'outil nécessite un accès public à la vidéo et à ses sous-titres pour fonctionner correctement. Les vidéos privées ou non répertoriées ne sont pas supportées.
+                        </p>
+                    </details>
+                </div>
+            </section>
+
+            <!-- Final CTA -->
+            <section class="mt-24 md:mt-32 mb-16">
+                <div class="cta-container bg-card text-main rounded-xl p-8 md:p-16 shadow-xl border border-subtle text-center">
+                    <h2 class="font-serif text-4xl md:text-6xl font-bold mb-4 -tracking-[1px]">Prêt à accélérer votre veille ?</h2>
+                    <p class="text-lg text-subtle mb-8 max-w-lg mx-auto">
+                        Arrêtez de perdre du temps. Collez votre premier lien YouTube maintenant.
+                    </p>
+                    <div class="cta-actions flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="#form-section" class="bg-accent hover:opacity-90 text-white font-semibold px-7 py-3 rounded-lg transition duration-200 shadow-lg hover:shadow-md">
+                            Essayer YouSummarize (Gratuit)
                         </a>
                     </div>
+                    <p class="mt-4 text-xs text-subtle">Aucune inscription requise</p>
                 </div>
-                <div class="md:w-2/3">
-                    <h2 id="videoTitle" class="text-xl font-bold mb-2"></h2>
-                    <div class="flex items-center text-gray-600 mb-3">
-                        <i class="fas fa-user-circle mr-2"></i>
-                        <span id="channelTitle"></span>
-                    </div>
-                    <div id="videoStats" class="flex flex-wrap gap-4 text-sm text-gray-600">
-                        <div class="flex items-center">
-                            <i class="far fa-calendar-alt mr-1"></i>
-                            <span id="publishedDate"></span>
-                        </div>
-                        <div class="flex items-center">
-                            <i class="far fa-clock mr-1"></i>
-                            <span id="videoDuration"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Results (hidden by default) -->
-        <div id="results" class="card p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Résumé de la vidéo</h2>
-                <div class="flex gap-2">
-                    <button id="copyBtn" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded flex items-center gap-1 hover:bg-gray-200 transition text-sm">
-                        <i class="far fa-copy"></i>
-                        Copier
-                    </button>
-                    <button id="downloadBtn" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded flex items-center gap-1 hover:bg-gray-200 transition text-sm">
-                        <i class="fas fa-download"></i>
-                        Télécharger
-                    </button>
-                </div>
+            <!-- Optional Newsletter -->
+            <div class="newsletter pt-12 pb-6 my-16 lg:my-20 w-full max-w-2xl mx-auto text-center border-t border-subtle/30">
+                <h3 class="font-serif text-2xl font-semibold text-main mb-2">Restez informé</h3>
+                <p class="newsletter-description text-subtle text-sm mb-5">Nouveautés et astuces occasionnelles.</p>
+                <form class="newsletter-form flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+                    <input type="email" placeholder="votre.email@exemple.com" class="newsletter-input flex-grow px-4 py-2 border border-subtle rounded-md focus:ring-1 focus:ring-accent/50 focus:border-accent focus:outline-none text-sm bg-white shadow-inner" required>
+                    <button type="submit" class="newsletter-button bg-card hover-gradient text-subtle font-semibold px-4 py-2 rounded-md transition duration-200 border border-subtle shadow-sm text-sm">S'abonner</button>
+                </form>
             </div>
-            <div class="border-t border-gray-200 pt-4">
-                <div id="summaryContent" class="prose max-w-none"></div>
-            </div>
-        </div>
-    </main>
 
-    <!-- Toast notification -->
-    <div id="toast" class="toast">
-        <i id="toastIcon" class="fas"></i>
-        <span id="toastMessage"></span>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-subtle/50 pt-8 pb-6 mt-16 lg:mt-20 text-xs text-subtle">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <img src="./assets/images/logo-small.svg" alt="Logo" class="h-5 opacity-75">
+                    <p>© <span id="currentYear">2024</span> YouSummarize · par <a href="https://github.com/jp-fix" class="hover:text-main font-medium">jp-fix</a></p>
+                </div>
+                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end">
+                    <a href="#" class="hover:text-main transition">Confidentialité</a>
+                    <a href="#" class="hover:text-main transition">Conditions</a>
+                    <a href="mailto:contact@example.com" class="hover:text-main transition">Contact</a>
+                </nav>
+            </div>
+        </footer>
     </div>
 </div>
 
+<!-- Toast Notification Structure -->
+<div id="toast" class="fixed bottom-5 right-5 bg-main text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 text-sm opacity-0 translate-y-3 transition-all duration-300 ease-out z-50">
+    <i id="toastIcon" class="fas"></i>
+    <span id="toastMessage"></span>
+</div>
+
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    const summaryLengthButtons = document.querySelectorAll('#results .btn-option');
+    summaryLengthButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            summaryLengthButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
+                btn.classList.add('bg-white', 'text-subtle');
+            });
+            button.classList.add('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
+            button.classList.remove('bg-white', 'text-subtle');
+            console.log("Selected length:", button.dataset.length);
+            // Trigger summary update logic here...
+        });
+    });
+</script>
 <script src="js/app.js"></script>
+
 </body>
 </html>
