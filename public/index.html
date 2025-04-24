@@ -189,23 +189,14 @@
                     </div>
 
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-                        <div id="action-container" class="w-full sm:w-auto">
-                            <!-- Bouton de résumé (visible par défaut) -->
-                            <button
-                                    type="submit"
-                                    id="summarizeBtn"
-                                    class="w-full bg-accent hover:opacity-90 text-white font-semibold text-base px-7 py-3 rounded-lg flex items-center justify-center gap-2 transition duration-200 ease-in-out shadow-lg hover:shadow-md"
-                            >
-                                <i class="fas fa-magic" aria-hidden="true"></i>
-                                Générer le résumé
-                            </button>
-
-                            <!-- État de chargement (caché par défaut) - maintenant intégré dans le même conteneur -->
-                            <div id="inlineLoadingState" class="hidden w-full bg-accent text-white font-semibold text-base px-5 py-3 rounded-lg flex items-center justify-center gap-3 shadow-lg">
-                                <div class="loading-spinner border-white border-t-white" style="width: 20px; height: 20px;" aria-hidden="true"></div>
-                                <span id="inlineLoadingText">Analyse en cours...</span>
-                            </div>
-                        </div>
+                        <button
+                                type="submit"
+                                id="summarizeBtn"
+                                class="w-full sm:w-auto bg-accent hover:opacity-90 text-white font-semibold text-base px-7 py-3 rounded-lg flex items-center justify-center gap-2 transition duration-200 ease-in-out shadow-lg hover:shadow-md"
+                        >
+                            <i class="fas fa-magic" aria-hidden="true"></i>
+                            Générer le résumé
+                        </button>
 
                         <div class="flex items-center justify-center sm:justify-start gap-2">
                             <label for="language" class="text-sm text-subtle">Langue:</label>
@@ -218,14 +209,6 @@
                         </div>
                     </div>
                 </form>
-
-                <!-- État de la progression (caché par défaut) -->
-                <div id="progressContainer" class="w-full hidden mt-4">
-                    <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                        <div class="progress-bar rounded-full h-full" id="progressBar" style="width: 0%"></div>
-                    </div>
-                    <p class="text-xs text-subtle mt-2 text-center">Cela peut prendre quelques secondes...</p>
-                </div>
 
                 <!-- Examples -->
                 <div class="popular-examples mt-4 pt-4 border-t border-subtle/30">
@@ -241,7 +224,17 @@
                 </div>
             </div>
 
-            <!-- Le bloc de chargement séparé est supprimé car il est maintenant intégré dans le formulaire -->
+            <!-- Loading State -->
+            <div id="loadingState" class="bg-card p-6 rounded-lg shadow-md mb-8 hidden max-w-md mx-auto w-full border border-subtle text-center">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="loading-spinner" aria-hidden="true"></div>
+                    <p class="text-subtle font-medium" id="loadingText">Analyse en cours...</p>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-3 overflow-hidden">
+                    <div class="progress-bar rounded-full h-full" id="progressBar" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-subtle mt-2">Cela peut prendre quelques secondes.</p>
+            </div>
 
             <!-- Video Info & Results Container -->
             <div id="resultsContainer" class="w-full max-w-4xl mx-auto space-y-6">
@@ -429,7 +422,6 @@
 <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    // Gestion des boutons de longueur de résumé
     const summaryLengthButtons = document.querySelectorAll('#results .btn-option');
     summaryLengthButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -445,59 +437,6 @@
             // Vous devrez appeler votre fonction de mise à jour du résumé ici
             // en passant `selectedLength` ou l'état actuel de l'URL
             // updateSummaryDisplay(currentVideoId, selectedLength);
-        });
-    });
-
-    // Nouveau code pour gérer l'affichage du chargement intégré
-    document.getElementById('youtubeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        // Masquer le bouton de résumé et afficher l'état de chargement à sa place
-        document.getElementById('summarizeBtn').classList.add('hidden');
-        document.getElementById('inlineLoadingState').classList.remove('hidden');
-
-        // Afficher la barre de progression
-        document.getElementById('progressContainer').classList.remove('hidden');
-
-        // Simuler le traitement (sera remplacé par le vrai code dans app.js)
-        // Note: Ce bloc peut être supprimé, il sert juste à montrer le fonctionnement pour l'exemple
-        setTimeout(() => {
-            // Mise à jour de la progression (à titre d'exemple)
-            document.getElementById('progressBar').style.width = '30%';
-            document.getElementById('inlineLoadingText').textContent = 'Récupération de la transcription...';
-
-            setTimeout(() => {
-                document.getElementById('progressBar').style.width = '70%';
-                document.getElementById('inlineLoadingText').textContent = 'Génération du résumé...';
-
-                setTimeout(() => {
-                    document.getElementById('progressBar').style.width = '100%';
-
-                    // Une fois terminé, cacher l'état de chargement et réafficher le bouton
-                    setTimeout(() => {
-                        document.getElementById('inlineLoadingState').classList.add('hidden');
-                        document.getElementById('summarizeBtn').classList.remove('hidden');
-                        document.getElementById('progressContainer').classList.add('hidden');
-
-                        // Reset la barre de progression pour la prochaine utilisation
-                        document.getElementById('progressBar').style.width = '0%';
-
-                        // Afficher les résultats (à des fins de démo)
-                        document.getElementById('videoInfo').classList.remove('hidden');
-                        document.getElementById('results').classList.remove('hidden');
-                    }, 500);
-                }, 1500);
-            }, 1500);
-        }, 1000);
-    });
-
-    // Gestion des exemples de liens
-    document.querySelectorAll('.example-link').forEach(button => {
-        button.addEventListener('click', function() {
-            const url = this.getAttribute('data-url');
-            document.getElementById('youtubeUrl').value = url;
-            // Facultatif: soumettre automatiquement le formulaire
-            document.getElementById('youtubeForm').dispatchEvent(new Event('submit'));
         });
     });
 </script>
