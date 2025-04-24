@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact - YouSummarize - Contactez-nous pour toute question sur notre service de résumé de vidéos YouTube">
+    <title>Contact | YouSummarize</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./assets/images/favicon.png">
+    <style>
+        :root {
+            --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            --bg-color: #f0eee6;
+            --card-bg-color: #ffffff;
+            --text-color-main: #333333;
+            --text-color-subtle: #656358;
+            --border-color: #d0cec2;
+            --accent-color: #4f46e5;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-sans);
+            color: var(--text-color-main);
+        }
+        .font-serif { font-family: var(--font-serif); }
+        .bg-card { background-color: var(--card-bg-color); }
+        .border-subtle { border-color: var(--border-color); }
+        .accent { color: var(--accent-color); }
+        .bg-accent { background-color: var(--accent-color); }
+        .text-subtle { color: var(--text-color-subtle); }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+</style>
+</head>
+<body class="min-h-screen">
+<div class="shadow-lg bg-card m-2 rounded-2xl relative">
+    <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
+
+        <!-- Navigation -->
+        <nav class="w-full flex justify-between items-center mb-10 md:mb-16">
+            <a href="/" class="flex gap-2 items-center">
+                <img alt="YouSummarize Logo" width="36" height="36" src="./assets/images/logo.svg"/>
+                <span class="font-semibold text-lg">YouSummarize</span>
+            </a>
+            <a href="/" class="px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover:bg-[#E9E5D8] border border-subtle shadow-sm w-fit text-sm transition duration-150">
+                <i class="fas fa-home text-subtle"></i>
+                <span class="py-0 shrink-0 font-medium text-subtle">Retour à l'accueil</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="mb-16">
+            <div class="mb-8 text-center">
+                <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">Contactez-nous</h1>
+                <p class="text-subtle max-w-3xl mx-auto">Une question, une suggestion ou un problème ? Nous sommes là pour vous aider.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Contact Form Card -->
+                <div class="bg-card p-6 md:p-8 rounded-xl shadow-md border border-subtle">
+                    <h2 class="text-xl font-semibold mb-5">Envoyez-nous un message</h2>
+
+                    <form id="contactForm" class="space-y-5">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-subtle mb-1">Nom</label>
+                            <input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="Votre nom" required>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-subtle mb-1">Email</label>
+                            <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="votre.email@exemple.com" required>
+                        </div>
+
+                        <div>
+                            <label for="subject" class="block text-sm font-medium text-subtle mb-1">Sujet</label>
+                            <select id="subject" name="subject" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white">
+                                <option value="question">Question générale</option>
+                                <option value="feedback">Commentaire ou suggestion</option>
+                                <option value="bug">Signaler un problème</option>
+                                <option value="business">Opportunité commerciale</option>
+                                <option value="other">Autre</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-subtle mb-1">Message</label>
+                            <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="Détaillez votre message ici..." required></textarea>
+                        </div>
+
+                        <div class="flex items-start mb-2">
+                            <input type="checkbox" id="privacy" name="privacy" class="mt-1" required>
+                            <label for="privacy" class="ml-2 text-xs text-subtle">
+                                J'accepte que mes données soient traitées conformément à la <a href="/privacy" class="text-accent hover:underline">politique de confidentialité</a>.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-accent hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-paper-plane mr-2"></i> Envoyer le message
+                        </button>
+                    </form>
+
+                    <!-- Success Message (Hidden by default) -->
+                    <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <p>Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info Card -->
+                <div class="space-y-6">
+                    <div class="bg-card p-6 md:p-8 rounded-xl shadow-md border border-subtle">
+                        <h2 class="text-xl font-semibold mb-5">Informations de contact</h2>
+
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="mt-1 bg-[#f0eee6] p-2 rounded-lg">
+                                    <i class="fas fa-envelope text-accent"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-sm font-semibold">Email</h3>
+                                    <p class="text-subtle"><a href="mailto:contact@resumemavideo.fr" class="hover:text-accent">contact@resumemavideo.fr</a></p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="mt-1 bg-[#f0eee6] p-2 rounded-lg">
+                                    <i class="fab fa-github text-accent"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-sm font-semibold">GitHub</h3>
+                                    <p class="text-subtle"><a href="https://github.com/jp-fix/youSum" target="_blank" rel="noopener noreferrer" class="hover:text-accent">github.com/jp-fix/youSum</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-card p-6 md:p-8 rounded-xl shadow-md border border-subtle">
+                        <h2 class="text-xl font-semibold mb-5">FAQ Rapide</h2>
+
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-sm font-semibold">Combien coûte l'utilisation du service ?</h3>
+                                <p class="text-subtle text-sm mt-1">YouSummarize est entièrement gratuit à utiliser. Aucune inscription ni paiement n'est requis.</p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-sm font-semibold">Fonctionne-t-il avec toutes les vidéos YouTube ?</h3>
+                                <p class="text-subtle text-sm mt-1">Le service fonctionne avec les vidéos publiques qui disposent de sous-titres ou de transcriptions.</p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-sm font-semibold">Puis-je résumer des vidéos dans d'autres langues ?</h3>
+                                <p class="text-subtle text-sm mt-1">Oui, nous prenons en charge le français, l'anglais et l'espagnol pour les résumés.</p>
+                            </div>
+
+                            <div class="text-center mt-6">
+                                <a href="/#faq" class="text-accent hover:underline text-sm font-medium">
+                                    Voir toutes les questions fréquentes <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-subtle/50 pt-8 pb-6 mt-12 lg:mt-16 text-xs text-subtle">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <p>© <span id="currentYear">2025</span> YouSummarize · par <a href="https://github.com/jp-fix" class="hover:text-main font-medium">jp-fix</a></p>
+                </div>
+                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end">
+                    <a href="./api-docs.html" class="hover:text-main transition">Documentation API</a>
+                    <a href="./privacy.html" class="hover:text-main transition">Confidentialité</a>
+                    <a href="./terms.html" class="hover:text-main transition">Conditions</a>
+                    <a href="./contact.html" class="hover:text-main transition">Contact</a>
+                    <a href="./sitemap.html" class="hover:text-main transition">Plan du site</a>
+                </nav>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // Gestion du formulaire de contact
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Ici, vous pourriez ajouter le code pour envoyer les données du formulaire à votre backend
+        // Pour l'instant, nous affichons simplement le message de succès
+        document.getElementById('contactForm').classList.add('hidden');
+        document.getElementById('successMessage').classList.remove('hidden');
+
+        // En fonction de votre implémentation, vous pourriez remplacer cette partie par un appel API
+        // fetch('/api/contact', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({
+        //         name: document.getElementById('name').value,
+        //         email: document.getElementById('email').value,
+        //         subject: document.getElementById('subject').value,
+        //         message: document.getElementById('message').value,
+        //     })
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     document.getElementById('contactForm').classList.add('hidden');
+        //     document.getElementById('successMessage').classList.remove('hidden');
+        // })
+        // .catch(error => {
+        //     console.error('Error:', error);
+        //     alert('Une erreur est survenue. Veuillez réessayer plus tard.');
+        // });
+    });
+</script>
+</body>
+</html>
