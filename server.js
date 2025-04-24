@@ -202,77 +202,148 @@ app.post('/api/summarize', async (req, res) => {
     try {
         const { transcription, videoInfo, language = 'fr', isShorter = false } = req.body;
         
-        if (!transcription || transcription.trim() === '') {
-            return res.status(400).json({ error: 'Transcription requise et non vide' });
+        if (!transcription) {
+            return res.status(400).json({ error: 'Transcription requise' });
         }
         
         // --- Génération du Prompt Amélioré pour la Présentation ---
         let prompt = '';
-        const videoTitle = videoInfo?.title ? `"${videoInfo.title}"` : 'Titre inconnu';
-        const transcriptTypeText = isShorter ? (language === 'fr' ? 'Partielle (début seulement)' : 'Partial (beginning only)') : (language === 'fr' ? 'Complète' : 'Complete');
+        const videoTitle = videoInfo && videoInfo.title ? `"${videoInfo.title}"` : 'Titre inconnu';
+        const channelName = videoInfo && videoInfo.channelTitle ? `${videoInfo.channelTitle}` : 'Chaîne inconnue';
+        const transcriptTypeText = isShorter ?
+            (language === 'fr' ? 'Partielle (début seulement)' : 'Partial (beginning only)') :
+            (language === 'fr' ? 'Complète' : 'Complete');
         
         if (language === 'fr') {
             prompt = `
-Tâche: Générer un résumé structuré et bien présenté d'une transcription vidéo YouTube.
-Vidéo: ${videoTitle}
-Type de Transcription: ${transcriptTypeText}
+# CONTEXTE
+Tu es un expert en création de résumés vidéo clairs, concis et informatifs. Ta mission est de générer un résumé structuré d'une vidéo YouTube qui sera facile à lire et à comprendre pour n'importe quel lecteur.
 
-Instructions (Format de sortie: Markdown Standard):
+# INFORMATIONS SUR LA VIDÉO
+- Titre: ${videoTitle}
+- Chaîne: ${channelName}
+- Type de transcription: ${transcriptTypeText}
+
+# INSTRUCTIONS DE RÉSUMÉ
+Crée un résumé qualitatif et bien structuré qui capture l'essentiel de la vidéo. Le résumé doit:
+
+1. Commencer par une introduction qui contextualise le sujet de la vidéo en 1-2 phrases
+2. Être organisé en sections claires avec des titres pertinents
+3. Utiliser des paragraphes courts (2-3 phrases maximum)
+4. Présenter les informations dans un ordre logique et cohérent
+5. Employer un style naturel, fluide et agréable à lire
+6. Être précis et factuel, sans embellissement inutile
+${isShorter ? '7. Indiquer clairement que ce résumé est basé sur une transcription partielle et peut ne pas couvrir l\'intégralité du contenu' : ''}
+
+# FORMAT DE SORTIE (MARKDOWN)
+Utilise exactement cette structure pour ton résumé:
+
+## En Bref
+Synthétise l'ensemble du contenu en 2-3 phrases percutantes qui donnent l'essentiel de la vidéo.
+
+## Points Essentiels
+Liste sous forme de puces (•) les 3-5 informations les plus importantes à retenir de la vidéo:
+• Point 1
+• Point 2
+• etc.
 
 ## Résumé Détaillé
-Fournis un résumé bien structuré utilisant des **paragraphes clairs et distincts (2-4 phrases par paragraphe environ)** pour améliorer la lisibilité. Assure une fluidité logique (ex: chronologique ou thématique).
-${isShorter ? '**Note Importante:** Ce résumé est basé sur une transcription PARTIELLE. Commence le résumé en indiquant clairement ce fait.' : ''}
+Organise cette section en 2-4 sous-sections avec des sous-titres (###) pertinents. Chaque sous-section doit:
+- Contenir 1-3 paragraphes courts et concis
+- Présenter un aspect spécifique du contenu
+- Être facile à lire rapidement
 
-## Points Clés
-Liste les principaux enseignements ou points clés sous forme de puces (\`* \`) concises et informatives. Chaque point doit être clair et facile à comprendre.
+### Sous-titre 1
+Paragraphe 1...
 
-## Références (si applicable)
-Liste les sources, personnes ou références mentionnées sous forme de puces (\`* \`). Si aucune référence pertinente n'est trouvée dans la transcription, indique explicitement : \`* Aucune référence spécifique mentionnée.\`.
+Paragraphe 2...
 
-## Actions Recommandées (si applicable)
-Liste les conseils pratiques ou actions suggérées sous forme de puces (\`* \`). Si aucune action spécifique n'est recommandée dans la transcription, indique explicitement : \`* Aucune action spécifique recommandée.\`.
+### Sous-titre 2
+Paragraphe...
 
----
-Règles de Formatage Supplémentaires:
-- Utilise **exclusivement** les en-têtes Markdown \`##\` demandés ci-dessus.
-- Utilise \`* \` (astérisque suivi d'un espace) pour **toutes** les listes à puces.
-- Assure une bonne lisibilité avec des sauts de ligne clairs **entre les paragraphes** du résumé détaillé et **entre chaque section principale** (\`##\`).
-- Ne réponds *que* avec le contenu formaté en Markdown, en commençant par \`## Résumé Détaillé\`. N'ajoute aucune introduction ou conclusion en dehors de ce format.
+## Informations Complémentaires
+Ajoute toute information pertinente qui enrichit la compréhension:
+• Références citées: personnes, livres, études (si mentionnées)
+• Concepts clés expliqués
+• Contexte supplémentaire pour mieux comprendre le sujet
+• Conseils ou actions recommandées (si applicables)
 
----
-Transcription:
+# CONSIGNES STYLISTIQUES
+- Sois concis et direct
+- Évite le jargon sauf s'il est essentiel au sujet
+- Utilise un ton neutre mais engageant
+- Préfère la voix active à la voix passive
+- Emploie des connecteurs logiques pour assurer la fluidité
+- Priorise les phrases courtes et claires
+- N'ajoute jamais d'information qui n'est pas présente dans la transcription
+
+# TRANSCRIPTION
 ${transcription}
 `;
         } else { // language 'en' or default
             prompt = `
-Task: Generate a structured and well-presented summary of a YouTube video transcript.
-Video: ${videoTitle}
-Transcript Type: ${transcriptTypeText}
+# CONTEXT
+You are an expert at creating clear, concise, and informative video summaries. Your mission is to generate a structured summary of a YouTube video that will be easy to read and understand for any reader.
 
-Instructions (Output Format: Standard Markdown):
+# VIDEO INFORMATION
+- Title: ${videoTitle}
+- Channel: ${channelName}
+- Transcript type: ${transcriptTypeText}
+
+# SUMMARY INSTRUCTIONS
+Create a qualitative, well-structured summary that captures the essence of the video. The summary must:
+
+1. Begin with an introduction that contextualizes the video's subject in 1-2 sentences
+2. Be organized into clear sections with relevant headings
+3. Use short paragraphs (maximum 2-3 sentences)
+4. Present information in a logical and coherent order
+5. Employ a natural, fluid, and pleasant-to-read style
+6. Be precise and factual, without unnecessary embellishment
+${isShorter ? '7. Clearly indicate that this summary is based on a partial transcript and may not cover the entire content' : ''}
+
+# OUTPUT FORMAT (MARKDOWN)
+Use exactly this structure for your summary:
+
+## In Brief
+Synthesize the entire content in 2-3 impactful sentences that convey the essence of the video.
+
+## Key Takeaways
+List in bullet points (•) the 3-5 most important pieces of information to remember from the video:
+• Point 1
+• Point 2
+• etc.
 
 ## Detailed Summary
-Provide a well-structured summary using **clear, distinct paragraphs (approx. 2-4 sentences each)** to enhance readability. Ensure logical flow (e.g., chronological or thematic).
-${isShorter ? '**Important Note:** This summary is based on a PARTIAL transcript. Start the summary by clearly stating this.' : ''}
+Organize this section into 2-4 subsections with relevant subtitles (###). Each subsection should:
+- Contain 1-3 short and concise paragraphs
+- Present a specific aspect of the content
+- Be easy to quickly read
 
-## Key Points
-List the main takeaways or key points as concise, informative bullet points (\`* \`). Each point should be clear and easy to grasp.
+### Subtitle 1
+Paragraph 1...
 
-## References (if applicable)
-List mentioned sources, people, or references as bullet points (\`* \`). If no relevant references are found in the transcript, explicitly state: \`* No specific references mentioned.\`.
+Paragraph 2...
 
-## Recommended Actions (if applicable)
-List practical advice or suggested actions as bullet points (\`* \`). If no specific actions are recommended in the transcript, explicitly state: \`* No specific actions recommended.\`.
+### Subtitle 2
+Paragraph...
 
----
-Additional Formatting Rules:
-- Use **only** the Markdown \`##\` headers requested above.
-- Use \`* \` (asterisk followed by a space) for **all** bullet points.
-- Ensure good readability with clear line breaks **between paragraphs** in the detailed summary and **between each main section** (\`##\`).
-- Respond *only* with the Markdown formatted content, starting with \`## Detailed Summary\`. Do not add any introduction or conclusion outside this format.
+## Additional Information
+Add any relevant information that enhances understanding:
+• Cited references: people, books, studies (if mentioned)
+• Key concepts explained
+• Additional context to better understand the subject
+• Tips or recommended actions (if applicable)
 
----
-Transcript:
+# STYLISTIC GUIDELINES
+- Be concise and direct
+- Avoid jargon unless essential to the subject
+- Use a neutral but engaging tone
+- Prefer active voice over passive voice
+- Use logical connectors to ensure fluidity
+- Prioritize short and clear sentences
+- Never add information that is not present in the transcript
+
+# TRANSCRIPT
 ${transcription}
 `;
         }
@@ -290,77 +361,64 @@ ${transcription}
                     text: prompt
                 }]
             }],
-            // Ajout potentiel de paramètres pour contrôler la sortie (optionnel)
             generationConfig: {
-                // temperature: 0.6, // Légèrement moins créatif, plus factuel
-                // responseMimeType: "text/plain" // Assurer une sortie texte pur (Markdown est du texte)
-            },
-            // safetySettings: [] // Définir les niveaux de sécurité si nécessaire
+                temperature: 0.7,
+                topP: 0.8,
+                maxOutputTokens: 4000
+            }
         };
         const geminiHeaders = {
             'Content-Type': 'application/json',
             'x-goog-api-key': process.env.GEMINI_API_KEY
         };
         
-        // console.log("Envoi de la requête à Gemini avec prompt amélioré (début):", prompt.substring(0, 300) + "...");
-        
+        // Effectuer la requête à l'API Gemini
         const response = await axios.post(geminiUrl, geminiPayload, { headers: geminiHeaders });
         
-        let responseData;
-        let responseStatus = 200; // Statut par défaut
-        
-        try {
-            const candidate = response.data?.candidates?.[0];
-            const textContent = candidate?.content?.parts?.[0]?.text;
-            const finishReason = candidate?.finishReason;
-            const safetyRatings = candidate?.safetyRatings; // Récupérer les safety ratings
+        // Traiter la réponse
+        if (response.data && response.data.candidates && response.data.candidates.length > 0) {
+            const candidate = response.data.candidates[0];
+            const textContent = candidate.content?.parts?.[0]?.text;
+            const finishReason = candidate.finishReason;
             
-            if (textContent && finishReason === 'STOP') { // Vérifier aussi finishReason
-                responseData = {
-                    summary: textContent.trim(),
-                    // Inclure des métadonnées utiles si nécessaire
-                    _meta: {
-                        finishReason: finishReason,
-                        safetyRatings: safetyRatings
-                    }
-                };
-                
+            if (textContent && finishReason === 'STOP') {
+                return res.json({
+                    summary: textContent.trim()
+                });
             } else {
-                // Gérer les cas où la génération est bloquée ou incomplète
-                const blockReason = response.data?.promptFeedback?.blockReason || 'Inconnue';
-                const blockMessage = response.data?.promptFeedback?.blockReasonMessage || '';
-                const defaultMessage = `Génération de contenu échouée ou incomplète. Raison: ${finishReason || blockReason} ${blockMessage ? `(${blockMessage})` : ''}`;
-                
-                console.error("Erreur ou réponse inattendue de Gemini:", defaultMessage, JSON.stringify(response.data, null, 2));
-                
-                responseData = {
-                    error: `Erreur lors de la génération du résumé: ${defaultMessage}`,
-                    _raw: response.data
-                };
-                // Si bloqué pour sécurité, ou autre raison API, utiliser 502. Sinon 500.
-                responseStatus = (finishReason === 'SAFETY' || finishReason === 'RECITATION' || blockReason !== 'Inconnue') ? 502 : 500;
+                const blockReason = response.data.promptFeedback?.blockReason || 'Inconnue';
+                const errorMessage = `Génération incomplète. Raison: ${finishReason || blockReason}`;
+                console.error("Erreur Gemini:", errorMessage);
+                return res.status(502).json({ error: errorMessage });
             }
-        } catch (parseError) {
-            console.error("Erreur lors du traitement de la réponse Gemini:", parseError);
-            responseData = {
-                error: "Impossible de traiter la réponse de l'API de génération",
-                _raw: response.data
-            };
-            responseStatus = 500; // Erreur interne du serveur
+        } else {
+            console.error("Réponse Gemini invalide:", response.data);
+            return res.status(500).json({ error: "Format de réponse invalide de l'API" });
         }
         
-        // Renvoyer la réponse avec le statut approprié
-        res.status(responseStatus).json(responseData);
-        
     } catch (error) {
-        console.error('Erreur globale dans /api/summarize:', error.response?.data || error.message);
-        const status = error.response?.status || 500;
-        const message = error.response?.data?.error?.message || error.message || 'Erreur serveur inconnue';
-        res.status(status).json({
-            error: 'Erreur serveur lors de la tentative de génération du résumé',
-            message: message,
-            details: error.response?.data
-        });
+        console.error('Erreur dans /api/summarize:', error.message || error);
+        
+        // Déterminer le type d'erreur et renvoyer une réponse appropriée
+        if (error.response) {
+            // Erreur de l'API Gemini
+            return res.status(502).json({
+                error: "Erreur API externe",
+                message: error.response.data?.error?.message || "Échec de la requête à l'API externe"
+            });
+        } else if (error.request) {
+            // Erreur de réseau
+            return res.status(503).json({
+                error: "Erreur réseau",
+                message: "Impossible de contacter l'API externe"
+            });
+        } else {
+            // Autre erreur
+            return res.status(500).json({
+                error: "Erreur serveur",
+                message: error.message || "Une erreur inattendue s'est produite"
+            });
+        }
     }
 });
 
