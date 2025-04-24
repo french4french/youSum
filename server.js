@@ -81,7 +81,7 @@ app.get('/api/transcript', async (req, res) => {
 });
 
 // 3. Endpoint pour générer un résumé avec Gemini
-app.post('/api/summarize', async (req, res) => {
+/*app.post('/api/summarize', async (req, res) => {
     try {
         const { transcription, videoInfo, language = 'fr', isShorter = false } = req.body;
         
@@ -195,6 +195,157 @@ app.post('/api/summarize', async (req, res) => {
         res.status(500).json({
             error: 'Erreur serveur',
             message: error.message
+        });
+    }
+});*/
+app.post('/api/summarize', async (req, res) => {
+    try {
+        const { transcription, videoInfo, language = 'fr', isShorter = false } = req.body;
+        
+        if (!transcription || transcription.trim() === '') {
+            // Ajout d'une vérification pour une transcription vide
+            return res.status(400).json({ error: 'Transcription requise et non vide' });
+        }
+        
+        // --- Génération du Prompt Amélioré ---
+        let prompt = '';
+        const videoTitle = videoInfo?.title ? `"${videoInfo.title}"` : 'Titre inconnu';
+        const transcriptTypeText = isShorter ? (language === 'fr' ? 'Partielle (début seulement)' : 'Partial (beginning only)') : (language === 'fr' ? 'Complète' : 'Complete');
+        
+        if (language === 'fr') {
+            prompt = `
+Tâche: Analyser et structurer un résumé de transcription vidéo YouTube.
+Vidéo: ${videoTitle}
+Type de Transcription: ${transcriptTypeText}
+
+Instructions (Format de sortie: Markdown):
+
+## Résumé Détaillé
+Fournis un résumé complet et fidèle du contenu.
+${isShorter ? '**Note:** Indique clairement que ce résumé est basé sur une transcription partielle.' : ''}
+
+## Points Clés
+Liste à puces (\`* point\`) des idées et enseignements principaux.
+
+## Références (si applicable)
+Liste à puces (\`* point\`) des sources, références ou personnes mentionnées.
+
+## Actions Recommandées (si applicable)
+Liste à puces (\`* point\`) des conseils pratiques ou actions suggérés.
+
+---
+Transcription:
+${transcription}
+`;
+        } else { // language 'en' or default
+            prompt = `
+Task: Analyze and structure a summary of a YouTube video transcript.
+Video: ${videoTitle}
+Transcript Type: ${transcriptTypeText}
+
+Instructions (Output Format: Markdown):
+
+## Detailed Summary
+Provide a comprehensive and faithful summary of the content.
+${isShorter ? '**Note:** Clearly state this summary is based on a partial transcript.' : ''}
+
+## Key Points
+Bulleted list (\`* point\`) of main ideas and takeaways.
+
+## References (if applicable)
+Bulleted list (\`* point\`) of mentioned sources, references, or people.
+
+## Recommended Actions (if applicable)
+Bulleted list (\`* point\`) of practical advice or suggested actions.
+
+---
+Transcript:
+${transcription}
+`;
+        }
+        // --- Fin de la Génération du Prompt Amélioré ---
+        
+        // Validation simple de la clé API (pour le débogage)
+        if (!process.env.GEMINI_API_KEY) {
+            console.error('Erreur: Clé API Gemini (GEMINI_API_KEY) manquante dans .env');
+            return res.status(500).json({ error: 'Configuration serveur incomplète (Clé API manquante)' });
+        }
+        
+        // Requête à l'API Gemini
+        const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'; // Utilisation de Flash pour potentiellement plus de rapidité/moins de coût
+        const geminiPayload = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
+            // Optionnel: Ajouter des configurations de génération si nécessaire
+            // generationConfig: {
+            //   temperature: 0.7,
+            //   // ... autres paramètres
+            // }
+        };
+        const geminiHeaders = {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': process.env.GEMINI_API_KEY
+        };
+        
+        console.log("Envoi de la requête à Gemini avec prompt:", prompt.substring(0, 200) + "..."); // Log tronqué pour la lisibilité
+        
+        const response = await axios.post(geminiUrl, geminiPayload, { headers: geminiHeaders });
+        
+        // Transformation de la réponse pour la rendre compatible avec le client
+        let responseData;
+        
+        try {
+            // Extraire le texte du résumé de la structure Gemini attendue
+            // Le texte retourné DOIT contenir le Markdown structuré demandé dans le prompt
+            const candidate = response.data?.candidates?.[0];
+            const textContent = candidate?.content?.parts?.[0]?.text;
+            
+            if (textContent) {
+                // Le client s'attend à recevoir le Markdown complet dans le champ 'summary'
+                responseData = {
+                    summary: textContent.trim(), // Nettoyer les espaces blancs potentiels
+                    // Conserver les informations de feedback si disponibles et utiles
+                    promptFeedback: candidate?.promptFeedback,
+                    finishReason: candidate?.finishReason
+                };
+                console.log("Résumé généré avec succès (début):", responseData.summary.substring(0, 150) + "...");
+            } else {
+                // Si la structure ou le contenu n'est pas celui attendu
+                console.error("Structure de réponse Gemini inattendue ou contenu textuel manquant:", JSON.stringify(response.data, null, 2));
+                // Essayer de fournir plus de détails sur l'erreur si possible (ex: finishReason)
+                const finishReason = candidate?.finishReason || response.data?.promptFeedback?.blockReason;
+                const blockMessage = response.data?.promptFeedback?.blockReasonMessage;
+                responseData = {
+                    error: `Structure de réponse de l'API inattendue ou contenu manquant. Raison: ${finishReason || 'Inconnue'} ${blockMessage ? `(${blockMessage})` : ''}`,
+                    _raw: response.data // Fournir les données brutes pour le débogage
+                };
+                // Retourner un statut d'erreur approprié si la réponse de l'API indique un problème
+                res.status(502); // Bad Gateway - indique un problème avec la réponse de l'API externe
+            }
+        } catch (parseError) {
+            console.error("Erreur lors de l'extraction/traitement du résumé:", parseError);
+            responseData = {
+                error: "Impossible d'extraire ou traiter le résumé de la réponse de l'API",
+                _raw: response.data // Fournir les données brutes pour le débogage
+            };
+            res.status(500); // Erreur interne du serveur
+        }
+        
+        // Renvoyer la réponse (éventuellement avec un statut d'erreur défini ci-dessus)
+        res.json(responseData);
+        
+    } catch (error) {
+        console.error('Erreur lors de la génération du résumé (catch global):', error.response?.data || error.message);
+        // Fournir une erreur plus spécifique si elle provient d'axios/Gemini
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.error?.message || error.message || 'Erreur serveur inconnue';
+        res.status(status).json({
+            error: 'Erreur serveur lors de l\'appel à l\'API de génération',
+            message: message,
+            details: error.response?.data // Inclure les détails de l'erreur API si disponibles
         });
     }
 });
