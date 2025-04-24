@@ -814,18 +814,24 @@ cp .env.example .env
         </main>
 
         <!-- Footer -->
-        <footer class="border-t border-subtle/50 pt-8 pb-6 text-xs text-subtle">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                <div class="flex items-center gap-2">
-                    <p>© <span id="currentYear">2025</span> YouSummarize · par <a href="https://github.com/jp-fix" class="hover:text-main font-medium">jp-fix</a></p>
+        <!-- Footer -->
+        <footer class="border-t border-subtle/50 pt-8 pb-6 mt-12 lg:mt-16 text-xs text-subtle">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1">
+                    <span>© <span id="currentYear">2025</span> YouSummarize</span>
+                    <span class="hidden sm:inline">·</span>
+                    <span>par <a href="https://github.com/jp-fix" target="_blank" rel="noopener noreferrer external" class="hover:text-main font-medium">jp-fix</a></span>
+                    <span class="hidden sm:inline">·</span>
+                    <a href="https://github.com/Jp-fix/youSum" target="_blank" rel="noopener noreferrer external" class="flex items-center gap-1 hover:text-main transition" title="Voir le code source sur GitHub"><i class="fab fa-github text-sm" aria-hidden="true"></i></a>
                 </div>
-                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end">
+                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end mt-2 sm:mt-0">
                     <a href="./api-docs.html" class="hover:text-main transition">Documentation API</a>
                     <a href="./privacy.html" class="hover:text-main transition">Confidentialité</a>
                     <a href="./terms.html" class="hover:text-main transition">Conditions</a>
                     <a href="./contact.html" class="hover:text-main transition">Contact</a>
                     <a href="./sitemap.html" class="hover:text-main transition">Plan du site</a>
                 </nav>
+
             </div>
         </footer>
     </div>
