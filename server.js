@@ -206,7 +206,7 @@ app.post('/api/summarize', async (req, res) => {
             return res.status(400).json({ error: 'Transcription requise' });
         }
         
-        // --- Génération du Prompt Amélioré pour la Présentation ---
+        // --- Génération du Prompt Amélioré avec Formatage Visuel Optimisé ---
         let prompt = '';
         const videoTitle = videoInfo && videoInfo.title ? `"${videoInfo.title}"` : 'Titre inconnu';
         const channelName = videoInfo && videoInfo.channelTitle ? `${videoInfo.channelTitle}` : 'Chaîne inconnue';
@@ -217,65 +217,87 @@ app.post('/api/summarize', async (req, res) => {
         if (language === 'fr') {
             prompt = `
 # CONTEXTE
-Tu es un expert en création de résumés vidéo clairs, concis et informatifs. Ta mission est de générer un résumé structuré d'une vidéo YouTube qui sera facile à lire et à comprendre pour n'importe quel lecteur.
+Tu es un expert en création de résumés vidéo clairs, concis et visuellement structurés. Ta mission est de générer un résumé d'une vidéo YouTube avec une mise en page exceptionnelle et une hiérarchisation claire des informations.
 
 # INFORMATIONS SUR LA VIDÉO
 - Titre: ${videoTitle}
 - Chaîne: ${channelName}
 - Type de transcription: ${transcriptTypeText}
 
-# INSTRUCTIONS DE RÉSUMÉ
-Crée un résumé qualitatif et bien structuré qui capture l'essentiel de la vidéo. Le résumé doit:
+# INSTRUCTIONS DE MISE EN FORME ET HIÉRARCHISATION
 
-1. Commencer par une introduction qui contextualise le sujet de la vidéo en 1-2 phrases
-2. Être organisé en sections claires avec des titres pertinents
-3. Utiliser des paragraphes courts (2-3 phrases maximum)
-4. Présenter les informations dans un ordre logique et cohérent
-5. Employer un style naturel, fluide et agréable à lire
-6. Être précis et factuel, sans embellissement inutile
-${isShorter ? '7. Indiquer clairement que ce résumé est basé sur une transcription partielle et peut ne pas couvrir l\'intégralité du contenu' : ''}
+## Structure et espacement
+- Utilise **deux sauts de ligne** entre les sections principales
+- Utilise **un saut de ligne** entre les paragraphes et sous-sections
+- Ajoute un espacement visuel avant et après les listes à puces
+- Assure-toi que chaque section est visuellement distincte des autres
 
-# FORMAT DE SORTIE (MARKDOWN)
-Utilise exactement cette structure pour ton résumé:
+## Hiérarchisation visuelle
+- Utilise les niveaux de titres de façon cohérente: ## pour sections principales, ### pour sous-sections
+- **Mets en gras les concepts clés** et les termes importants dans chaque section
+- *Utilise l'italique* pour les nuances, exemples ou expressions spécifiques
+- Utilise le formatage ~~barré~~ uniquement si nécessaire pour montrer une correction ou alternative
+- Crée une hiérarchie visuelle claire avec l'indentation des listes
 
-## En Bref
-Synthétise l'ensemble du contenu en 2-3 phrases percutantes qui donnent l'essentiel de la vidéo.
+## Formatage spécial pour l'impact
+- Pour les définitions importantes: **Terme clé**: explication...
+- Pour les citations: > Citation importante ou exemple concret
+- Pour les astuces ou conseils pratiques: 💡 *Astuce:* conseil pratique...
+- Pour les avertissements si nécessaire: ⚠️ *Attention:* point de vigilance...
 
-## Points Essentiels
-Liste sous forme de puces (•) les 3-5 informations les plus importantes à retenir de la vidéo:
-• Point 1
-• Point 2
-• etc.
+# FORMAT DE SORTIE (MARKDOWN AMÉLIORÉ)
+Ton résumé doit suivre précisément cette structure avec la mise en forme indiquée:
 
-## Résumé Détaillé
-Organise cette section en 2-4 sous-sections avec des sous-titres (###) pertinents. Chaque sous-section doit:
-- Contenir 1-3 paragraphes courts et concis
-- Présenter un aspect spécifique du contenu
-- Être facile à lire rapidement
+## **En Bref**
 
-### Sous-titre 1
-Paragraphe 1...
+Un résumé concis et impactant de 2-3 phrases qui présente l'essence de la vidéo. Cette section doit être facilement scannable et donner envie de lire la suite.
 
-Paragraphe 2...
 
-### Sous-titre 2
-Paragraphe...
+## **Points Essentiels**
 
-## Informations Complémentaires
-Ajoute toute information pertinente qui enrichit la compréhension:
-• Références citées: personnes, livres, études (si mentionnées)
-• Concepts clés expliqués
-• Contexte supplémentaire pour mieux comprendre le sujet
-• Conseils ou actions recommandées (si applicables)
+Une liste aérée des informations cruciales, chaque point commençant par un verbe d'action ou un concept clé en **gras**:
+
+• **[Concept clé]**: Explication concise et claire...
+• **[Action recommandée]**: Description de l'action et son bénéfice...
+• **[Technique principale]**: Explication de la technique et son application...
+
+
+## **Résumé Détaillé**
+
+### **[Premier thème principal]**
+
+Un paragraphe introductif qui présente ce thème spécifique. Les **termes importants** sont en gras, et les *nuances ou exemples* en italique.
+
+Un second paragraphe si nécessaire pour développer davantage ce thème, avec toujours une attention particulière à la **mise en valeur des éléments clés**.
+
+### **[Deuxième thème principal]**
+
+Description claire et concise, en mettant l'accent sur les **concepts essentiels** et leur application pratique.
+
+> Si pertinent, inclure une citation ou un exemple concret dans un bloc de citation qui se démarque visuellement.
+
+### **[Troisième thème principal]**
+
+Explication détaillée avec **mise en évidence** des informations cruciales. Conserver des paragraphes courts et aérés pour faciliter la lecture.
+
+💡 *Astuce pratique:* Inclure un conseil directement applicable en lien avec ce thème.
+
+
+## **Informations Complémentaires**
+
+Une liste bien espacée et hiérarchisée d'informations additionnelles pertinentes:
+
+• **Références citées**: Personnes, livres, études mentionnés dans la vidéo...
+• **Ressources recommandées**: Outils, sites web, applications suggérés...
+• **Pour aller plus loin**: Suggestions de sujets connexes ou d'approfondissement...
 
 # CONSIGNES STYLISTIQUES
-- Sois concis et direct
-- Évite le jargon sauf s'il est essentiel au sujet
-- Utilise un ton neutre mais engageant
-- Préfère la voix active à la voix passive
-- Emploie des connecteurs logiques pour assurer la fluidité
-- Priorise les phrases courtes et claires
-- N'ajoute jamais d'information qui n'est pas présente dans la transcription
+- Utilise un ton professionnel mais accessible
+- Préfère les phrases courtes et directes
+- Emploie un vocabulaire précis mais non jargonnant
+- Assure une cohérence visuelle dans l'ensemble du document
+- Utilise les listes à puces pour faciliter la lecture en diagonale
+- Crée un document qui invite à la lecture par sa structure aérée
 
 # TRANSCRIPTION
 ${transcription}
@@ -283,65 +305,87 @@ ${transcription}
         } else { // language 'en' or default
             prompt = `
 # CONTEXT
-You are an expert at creating clear, concise, and informative video summaries. Your mission is to generate a structured summary of a YouTube video that will be easy to read and understand for any reader.
+You are an expert in creating clear, concise, and visually structured video summaries. Your mission is to generate a summary of a YouTube video with exceptional layout and clear information hierarchy.
 
 # VIDEO INFORMATION
 - Title: ${videoTitle}
 - Channel: ${channelName}
 - Transcript type: ${transcriptTypeText}
 
-# SUMMARY INSTRUCTIONS
-Create a qualitative, well-structured summary that captures the essence of the video. The summary must:
+# FORMATTING AND HIERARCHY INSTRUCTIONS
 
-1. Begin with an introduction that contextualizes the video's subject in 1-2 sentences
-2. Be organized into clear sections with relevant headings
-3. Use short paragraphs (maximum 2-3 sentences)
-4. Present information in a logical and coherent order
-5. Employ a natural, fluid, and pleasant-to-read style
-6. Be precise and factual, without unnecessary embellishment
-${isShorter ? '7. Clearly indicate that this summary is based on a partial transcript and may not cover the entire content' : ''}
+## Structure and spacing
+- Use **two line breaks** between main sections
+- Use **one line break** between paragraphs and subsections
+- Add visual spacing before and after bullet point lists
+- Ensure each section is visually distinct from others
 
-# OUTPUT FORMAT (MARKDOWN)
-Use exactly this structure for your summary:
+## Visual hierarchy
+- Use heading levels consistently: ## for main sections, ### for subsections
+- **Bold key concepts** and important terms in each section
+- *Italicize* nuances, examples, or specific expressions
+- Use ~~strikethrough~~ formatting only if necessary to show a correction or alternative
+- Create a clear visual hierarchy with list indentation
 
-## In Brief
-Synthesize the entire content in 2-3 impactful sentences that convey the essence of the video.
+## Special formatting for impact
+- For important definitions: **Key Term**: explanation...
+- For quotes: > Important quote or concrete example
+- For tips or practical advice: 💡 *Tip:* practical advice...
+- For warnings if necessary: ⚠️ *Caution:* point to watch out for...
 
-## Key Takeaways
-List in bullet points (•) the 3-5 most important pieces of information to remember from the video:
-• Point 1
-• Point 2
-• etc.
+# OUTPUT FORMAT (ENHANCED MARKDOWN)
+Your summary must follow this structure precisely with the indicated formatting:
 
-## Detailed Summary
-Organize this section into 2-4 subsections with relevant subtitles (###). Each subsection should:
-- Contain 1-3 short and concise paragraphs
-- Present a specific aspect of the content
-- Be easy to quickly read
+## **In Brief**
 
-### Subtitle 1
-Paragraph 1...
+A concise and impactful summary of 2-3 sentences that presents the essence of the video. This section should be easily scannable and make the reader want to continue.
 
-Paragraph 2...
 
-### Subtitle 2
-Paragraph...
+## **Key Takeaways**
 
-## Additional Information
-Add any relevant information that enhances understanding:
-• Cited references: people, books, studies (if mentioned)
-• Key concepts explained
-• Additional context to better understand the subject
-• Tips or recommended actions (if applicable)
+A well-spaced list of crucial information, each point starting with an action verb or key concept in **bold**:
+
+• **[Key concept]**: Concise and clear explanation...
+• **[Recommended action]**: Description of the action and its benefit...
+• **[Main technique]**: Explanation of the technique and its application...
+
+
+## **Detailed Summary**
+
+### **[First main theme]**
+
+An introductory paragraph that presents this specific theme. **Important terms** are in bold, and *nuances or examples* in italics.
+
+A second paragraph if necessary to further develop this theme, always with particular attention to **highlighting key elements**.
+
+### **[Second main theme]**
+
+Clear and concise description, emphasizing **essential concepts** and their practical application.
+
+> If relevant, include a quote or concrete example in a visually distinct quote block.
+
+### **[Third main theme]**
+
+Detailed explanation with **highlighting** of crucial information. Keep paragraphs short and well-spaced for easy reading.
+
+💡 *Practical tip:* Include a directly applicable tip related to this theme.
+
+
+## **Additional Information**
+
+A well-spaced and hierarchical list of relevant additional information:
+
+• **Cited references**: People, books, studies mentioned in the video...
+• **Recommended resources**: Suggested tools, websites, applications...
+• **To go further**: Suggestions for related topics or deeper exploration...
 
 # STYLISTIC GUIDELINES
-- Be concise and direct
-- Avoid jargon unless essential to the subject
-- Use a neutral but engaging tone
-- Prefer active voice over passive voice
-- Use logical connectors to ensure fluidity
-- Prioritize short and clear sentences
-- Never add information that is not present in the transcript
+- Use a professional but accessible tone
+- Prefer short and direct sentences
+- Use precise but non-jargon vocabulary
+- Ensure visual consistency throughout the document
+- Use bullet points to facilitate diagonal reading
+- Create a document that invites reading through its airy structure
 
 # TRANSCRIPT
 ${transcription}
@@ -364,7 +408,7 @@ ${transcription}
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.8,
-                maxOutputTokens: 4000
+                maxOutputTokens: 6000
             }
         };
         const geminiHeaders = {
@@ -382,8 +426,21 @@ ${transcription}
             const finishReason = candidate.finishReason;
             
             if (textContent && finishReason === 'STOP') {
+                // Améliorer davantage le rendu Markdown pour assurer un affichage optimal
+                const enhancedMarkdown = textContent.trim()
+                    // S'assurer que les titres principaux ont un espacement adéquat
+                    .replace(/\n## /g, '\n\n## ')
+                    // S'assurer que les sous-titres ont un espacement adéquat
+                    .replace(/\n### /g, '\n\n### ')
+                    // Ajouter un espacement avant les listes à puces
+                    .replace(/\n• /g, '\n\n• ')
+                    // Normaliser l'espacement entre les sections
+                    .replace(/\n\n\n+/g, '\n\n')
+                    // Ajouter un espacement après les listes à puces
+                    .replace(/\n• (.*?)(?=\n[^•])/gs, '\n• $1\n');
+                
                 return res.json({
-                    summary: textContent.trim()
+                    summary: enhancedMarkdown
                 });
             } else {
                 const blockReason = response.data.promptFeedback?.blockReason || 'Inconnue';
