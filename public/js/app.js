@@ -245,13 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
         html = html.replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
             const languageClass = lang ? ` class="language-${lang}"` : '';
             // Basic escaping for HTML within code blocks
-            const escapedCode = code.replace(/</g, '<').replace(/>/g, '>');
+            const escapedCode = code.replace(/</g, '<').replace(/>/g, '>'); // Use HTML entities
             return `<pre><code${languageClass}>${escapedCode.trim()}</code></pre>`;
         });
         
         // Blockquotes ( > quote ) - Must handle multi-line correctly
         html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
-        html = html.replace(/<\/blockquote>\n?<blockquote>/g, '<br>'); // Merge consecutive blockquotes
+        html = html.replace(/<\/blockquote>\n?<blockquote>/g, '<br>'); // Merge consecutive blockquotes with a line break
         
         // Headers (### Title)
         html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
@@ -261,58 +261,48 @@ document.addEventListener('DOMContentLoaded', function() {
         // Horizontal Rules (--- or ***)
         html = html.replace(/^(?:---|\*\*\*)\s*$/gm, '<hr>');
         
-        // Unordered Lists (* item or - item)
-        html = html.replace(/^\s*([*-]) (.*$)/gim, (match, marker, item) => `<li>${item}</li>`);
-        html = html.replace(/<\/li>\n?<li>/g, '</li><li>'); // Prepare for wrapping
-        html = html.replace(/(<li>.*?<\/li>)/gs, (match) => `<ul>${match}</ul>`); // Wrap list items
+        // Unordered Lists (* item or - item) - Improved handling
+        html = html.replace(/^\s*([*-]) (.*?)($|\n(?!\s*[*-] ))/gim, (match, marker, item) => `<li>${item.trim()}</li>`);
+        html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => `<ul>${match.trim()}</ul>\n`); // Wrap consecutive list items
         html = html.replace(/<\/ul>\s*\n?<ul>/g, ''); // Merge consecutive lists
         
-        
-        // Ordered Lists (1. item)
-        html = html.replace(/^\s*\d+\. (.*$)/gim, (match, item) => `<li>${item}</li>`);
-        // Reuse UL logic for wrapping OL for simplicity here, but correctly wrap in <ol>
-        html = html.replace(/(<li>.*?<\/li>)(?!<\/ol>)/gs, (match, content) => {
-            // Check if it looks like an ordered list item that hasn't been wrapped yet
-            if (match.startsWith('<li>') && !match.includes('<ul>') && !match.includes('<ol>')) {
-                return `<ol>${match}</ol>`;
-            }
-            return match; // Avoid double wrapping
-        });
+        // Ordered Lists (1. item) - Improved handling
+        html = html.replace(/^\s*\d+\. (.*?)($|\n(?!\s*\d+\. ))/gim, (match, item) => `<li>${item.trim()}</li>`);
+        html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => `<ol>${match.trim()}</ol>\n`); // Wrap consecutive list items
         html = html.replace(/<\/ol>\s*\n?<ol>/g, ''); // Merge consecutive ordered lists
         
-        // Paragraphs (treat remaining text blocks)
-        // Wrap blocks of text not already in a block element into <p> tags
-        // This is tricky with regex, often done after splitting by \n\n
-        // Simple approach: wrap lines not starting with <tag or being empty
-        html = html.split('\n').map(line => {
-            line = line.trim();
-            if (line.length === 0 || line.startsWith('<') || line.match(/^<\/?(ul|ol|li|h[1-6]|block|pre|hr)/)) {
-                return line; // Keep existing block tags or empty lines
+        
+        // Paragraphs (treat remaining text blocks) - Split by double newline first
+        html = html.split(/\n{2,}/).map(paragraph => {
+            paragraph = paragraph.trim();
+            if (!paragraph) return '';
+            // Avoid wrapping existing block elements in <p>
+            if (paragraph.match(/^<(?:ul|ol|li|h[1-6]|block|pre|hr|table|thead|tbody|tr|th|td)/i)) {
+                return paragraph;
             }
-            return `<p>${line}</p>`; // Wrap other lines in <p>
-        }).join('\n');
-        html = html.replace(/<\/p>\n?<p>/g, '</p><p>'); // Join paragraphs separated only by newline
+            // Also avoid wrapping paragraphs that are just list items (already handled)
+            if (paragraph.startsWith('<li>') && paragraph.endsWith('</li>')) {
+                return paragraph; // Let list wrapping handle this
+            }
+            return `<p>${paragraph}</p>`;
+        }).join('\n\n'); // Join with double newline to preserve separation
         
-        // Inline Elements
-        // Links ([text](url))
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        // Inline Elements (applied within block elements now)
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'); // Links
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>'); // Inline Code
         
-        // Bold and Italic ( **bold** *italic* ) - Process bold first
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        // Line Breaks (convert single newlines within paragraphs/lists to <br>)
+        html = html.replace(/<p>(.*?)<\/p>/gs, (match, content) => `<p>${content.replace(/\n/g, '<br>')}</p>`);
+        html = html.replace(/<li>(.*?)<\/li>/gs, (match, content) => `<li>${content.replace(/\n/g, '<br>')}</li>`);
+        // Add similar replacements for other block elements if needed (e.g., blockquotes)
         
-        // Inline Code (`code`)
-        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-        
-        // Line Breaks (convert remaining newlines within paragraphs/list items etc. to <br>)
-        // Be careful not to add <br> between block elements
-        html = html.replace(/<\/(p|li|h[1-6]|blockquote)>\n<(?!(ul|ol|li|h[1-6]|blockquote|pre|hr))/g, '</$1><br><'); // Add br between certain blocks if needed? (Maybe remove)
-        html = html.replace(/\n/g, '<br>'); // Convert remaining newlines
-        
-        // Cleanup any potential <br> artifacts
-        html = html.replace(/<br>\s*<\/(ul|ol|li|h[1-6]|blockquote|pre)>/g, '</$1>'); // Remove <br> before closing block tags
-        html = html.replace(/<(ul|ol|li|h[1-6]|blockquote|pre)>\s*<br>/g, '<$1>'); // Remove <br> after opening block tags
-        html = html.replace(/<p><\/p>/g, ''); // Remove empty paragraphs
+        // Cleanup potential artifacts
+        html = html.replace(/<br>\s*<\/(ul|ol|li|h[1-6]|blockquote|pre|p)>/g, '</$1>'); // Remove <br> before closing block tags
+        html = html.replace(/<(ul|ol|li|h[1-6]|blockquote|pre|p)>\s*<br>/g, '<$1>'); // Remove <br> after opening block tags
+        html = html.replace(/<p>\s*<\/p>/g, ''); // Remove empty paragraphs
+        html = html.replace(/\n\n/g, '\n'); // Consolidate excessive newlines between blocks
         
         
         return html.trim();
@@ -438,7 +428,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingState.classList.add('hidden');
         summarizeBtn.disabled = false;
         isLoading = false;
-        updateProgressBar(0);
+        // updateProgressBar(0); // <<-- ERROR WAS HERE
+        progressBar.style.width = '0%'; // <<-- FIX: Directly reset progress bar style
         summaryContent.innerHTML = '';
         videoThumbnail.src = ''; // Clear previous thumbnail
         // Do NOT clear the youtubeUrl input field automatically
@@ -446,6 +437,17 @@ document.addEventListener('DOMContentLoaded', function() {
         videoData = null;
         currentTranscription = null;
         currentSummary = null;
+        currentSummaryLength = 'medium'; // Reset length state
+        
+        // Reset active state on length buttons (optional but good practice)
+        summaryLengthButtons.forEach((btn) => {
+            btn.classList.remove('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
+            btn.classList.add('bg-white', 'text-subtle');
+            if (btn.dataset.length === 'medium') { // Reset to medium visually
+                btn.classList.add('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
+                btn.classList.remove('bg-white', 'text-subtle');
+            }
+        });
     }
     
     /**
@@ -482,11 +484,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // 1. Fetch Video Info
             const fetchedVideoData = await fetchVideoInfo(videoId);
-            if (!fetchedVideoData || !fetchedVideoData.title.includes('Infos Indisponibles')) { // Check if fallback was used meaningfully
-                displayVideoInfo(fetchedVideoData); // Display info early
+            if (!fetchedVideoData || fetchedVideoData.title.includes('Infos Indisponibles')) { // Check if fallback was used meaningfully or real error occurred
+                // If fetchVideoInfo returns the fallback object, display it but warn
+                if(fetchedVideoData && fetchedVideoData.title.includes('Infos Indisponibles')){
+                    displayVideoInfo(fetchedVideoData); // Display minimal info
+                    showToast(languageSelect.value === 'fr' ? 'Infos vidéo limitées récupérées.' : 'Limited video info retrieved.', 'info');
+                } else {
+                    // If fetchVideoInfo truly failed (e.g., network error before returning fallback)
+                    throw new Error(languageSelect.value === 'fr' ? 'Impossible de récupérer les informations de base de la vidéo.' : 'Could not retrieve basic video information.');
+                }
             } else {
-                // If fetchVideoInfo truly failed (not just fallback)
-                throw new Error(languageSelect.value === 'fr' ? 'Impossible de récupérer les informations de base de la vidéo.' : 'Could not retrieve basic video information.');
+                displayVideoInfo(fetchedVideoData); // Display full info
             }
             
             
@@ -500,8 +508,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // 3. Generate Summary (using current length preference)
             const summaryHtml = await summarizeWithBackend(currentTranscription, videoData, currentSummaryLength);
             if (!summaryHtml || summaryHtml.includes('Impossible de générer le résumé')) {
-                // Error handled within summarizeWithBackend (toast shown)
-                throw new Error('SKIP_TO_FINALLY');
+                // Error handled within summarizeWithBackend (toast shown), display the error message itself
+                displaySummary(summaryHtml || `<p class="text-red-600">${languageSelect.value === 'fr' ? 'Erreur lors de la génération du résumé.' : 'Error generating summary.'}</p>`);
+                throw new Error('SKIP_TO_FINALLY'); // Stop further success messages but keep UI enabled
             }
             
             // 4. Display Summary
@@ -511,11 +520,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             if (error.message !== 'SKIP_TO_FINALLY') {
                 console.error('Erreur dans le processus handleSubmit:', error);
-                // Don't show generic toast if specific ones were shown already
-                if (!error.message.includes('transcription:') && !error.message.includes('résumé:')) {
+                // Don't show generic toast if specific ones were likely shown already by sub-functions
+                if (!error.message.includes('transcription:') && !error.message.includes('résumé:') && !error.message.includes('infos vidéo:')) {
                     showToast(languageSelect.value === 'fr' ? `Erreur: ${error.message}` : `Error: ${error.message}`, 'error');
                 }
-                // Optionally reset more aggressively on critical errors
+                // Optionally reset more aggressively on critical errors, but resetUI was already called at start
                 // resetUI();
             }
         } finally {
@@ -523,7 +532,8 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingState.classList.add('hidden');
             summarizeBtn.disabled = false;
             isLoading = false;
-            updateProgressBar(0); // Reset progress bar
+            // updateProgressBar(0); // <<-- ERROR WAS HERE
+            progressBar.style.width = '0%'; // <<-- FIX: Reset progress bar style
         }
     }
     
@@ -541,8 +551,17 @@ document.addEventListener('DOMContentLoaded', function() {
         tempDiv.innerHTML = currentSummary;
         // Replace <br> with newlines, handle paragraphs, lists etc. for better text structure
         tempDiv.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        tempDiv.querySelectorAll('p, h1, h2, h3, h4, li').forEach(el => el.append('\n')); // Add newline after block elements
-        const textToCopy = tempDiv.textContent || tempDiv.innerText || ''; // Get text content
+        tempDiv.querySelectorAll('p, h1, h2, h3, h4, li, blockquote').forEach(el => {
+            // Add newline *before* list items and headers for better spacing
+            if(el.tagName === 'LI' || el.tagName.startsWith('H') || el.tagName === 'BLOCKQUOTE') {
+                el.before('\n');
+            }
+            el.append('\n'); // Add newline after block elements
+        });
+        tempDiv.querySelectorAll('hr').forEach(hr => hr.replaceWith('\n---\n')); // Represent HR
+        
+        let textToCopy = tempDiv.textContent || tempDiv.innerText || ''; // Get text content
+        textToCopy = textToCopy.replace(/\n{3,}/g, '\n\n'); // Collapse multiple newlines
         
         if (!textToCopy.trim()) {
             showToast(languageSelect.value === 'fr' ? 'Le résumé est vide.' : 'Summary is empty.', 'error');
@@ -557,7 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Erreur copie Clipboard API:', err);
                 showToast(languageSelect.value === 'fr' ? 'Échec de la copie.' : 'Copy failed.', 'error');
                 // Fallback to execCommand if needed (less reliable)
-                // copyWithExecCommand(textToCopy.trim());
+                copyWithExecCommand(textToCopy.trim());
             });
         } else {
             // Fallback for older browsers or non-HTTPS
@@ -595,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /**
      * Generates and downloads the summary as a PDF document.
-     * Dynamically loads jsPDF and html2canvas if not already available.
+     * Dynamically loads jsPDF if not already available.
      */
     function downloadSummary() {
         if (!currentSummary || !videoData) {
@@ -603,21 +622,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const libs = {
-            jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-            // html2canvas is generally NOT needed if we format text manually
-            // html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-        };
+        const jspdfSrc = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         
         function loadScript(src) {
             return new Promise((resolve, reject) => {
-                // Check if already loaded (basic check by global variable)
-                if (src === libs.jspdf && typeof window.jspdf !== 'undefined') {
+                // Check if already loaded
+                if (typeof window.jspdf !== 'undefined') {
                     resolve();
                     return;
                 }
-                // Add more checks for other libs if needed
-                
                 const script = document.createElement('script');
                 script.src = src;
                 script.onload = resolve;
@@ -628,8 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         showToast(languageSelect.value === 'fr' ? 'Préparation du PDF...' : 'Preparing PDF...');
         
-        loadScript(libs.jspdf)
-            // .then(() => loadScript(libs.html2canvas)) // Only if using html2canvas
+        loadScript(jspdfSrc)
             .then(() => {
                 generatePDF(); // Call the PDF generation function
             })
@@ -654,6 +666,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const maxLineWidth = pageWidth - margin * 2;
                 let currentY = margin; // Start Y position
                 
+                // --- Add Custom Font (Optional - improves character support) ---
+                // Example using a Google Font URL (replace with actual font files if self-hosting)
+                // Note: jsPDF needs the font file itself, not just CSS. This requires more setup
+                // typically involving font files (ttf) and jsPDF's addFont() method.
+                // For simplicity, we'll stick to standard fonts. Consider using standard 'Helvetica', 'Times', 'Courier'.
+                // doc.setFont('Helvetica'); // Example: Set a standard font
+                
+                
                 // --- PDF Content ---
                 
                 // 1. Video Title (allow multiple lines)
@@ -673,7 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     `Chaîne: ${videoData.channelTitle || 'Inconnue'}`,
                     `Publié: ${formatDate(videoData.publishedAt)}`,
                     `Durée: ${videoData.duration || 'Inconnue'}`,
-                    `Résumé généré le: ${formatDate(new Date())} (Langue: ${languageSelect.value}, Longueur: ${currentSummaryLength})`
+                    `Résumé généré le: ${formatDate(new Date())} (Langue: ${languageSelect.value}, Longueur: currentSummaryLength)`
                 ];
                 
                 metadata.forEach(line => {
@@ -681,25 +701,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         doc.addPage();
                         currentY = margin;
                     }
-                    doc.text(line, margin, currentY);
-                    currentY += 5;
+                    // Handle potential long lines in metadata
+                    const metaLines = doc.splitTextToSize(line, maxLineWidth);
+                    doc.text(metaLines, margin, currentY);
+                    currentY += (metaLines.length * 4); // Increment Y based on number of lines * font size factor
                 });
                 
                 currentY += 5; // Extra space before summary
                 
                 // 3. Summary Content (Process HTML for basic formatting)
-                doc.setFontSize(11);
-                doc.setTextColor(0); // Black text
+                doc.setTextColor(0); // Reset to black text
                 
                 const summaryContainer = document.createElement('div');
                 summaryContainer.innerHTML = currentSummary; // Parse the HTML
                 
-                function addContentToPdf(element) {
-                    // Recursive function to handle nested elements if needed,
-                    // here simplified for common tags.
+                function addContentToPdf(element, currentIndent = 0) {
+                    // Recursive function to handle nested elements (basic list/blockquote nesting)
                     
                     // Check for page break BEFORE adding text
-                    if (currentY > pageHeight - margin - 10) { // Leave some bottom margin
+                    const neededSpace = 10; // Estimate space needed for potential text line
+                    if (currentY > pageHeight - margin - neededSpace) { // Leave some bottom margin
                         doc.addPage();
                         currentY = margin;
                         doc.setFontSize(11); // Reset font size after page break
@@ -708,57 +729,133 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     let textContent = (element.textContent || element.innerText || '').trim();
-                    if (!textContent) return; // Skip empty elements
-                    
                     let isBold = false;
-                    let isItalic = false;
+                    let isItalic = false; // jsPDF standard fonts might not support both bold+italic well
                     let fontSize = 11;
-                    let prefix = '';
+                    let textStyle = 'normal'; // 'normal', 'bold', 'italic', 'bolditalic'
+                    let elementMargin = 0; // Space before element
+                    let listPrefix = '';
+                    let currentX = margin + currentIndent;
+                    let elementColor = 0; // Default black
                     
+                    // Apply styles based on tag name
                     switch (element.tagName) {
-                        case 'H1': fontSize = 14; isBold = true; currentY += 2; break;
-                        case 'H2': fontSize = 13; isBold = true; currentY += 2; break;
-                        case 'H3': fontSize = 12; isBold = true; currentY += 2; break;
-                        case 'STRONG': case 'B': isBold = true; break; // Apply bold style mid-text if possible (complex)
-                        case 'EM': case 'I': isBold = true; break; // Apply italic style mid-text (complex)
-                        case 'P': currentY += 2; break; // Add space before paragraphs
+                        case 'H1': fontSize = 14; textStyle = 'bold'; elementMargin = 4; break;
+                        case 'H2': fontSize = 13; textStyle = 'bold'; elementMargin = 3; break;
+                        case 'H3': fontSize = 12; textStyle = 'bold'; elementMargin = 2; break;
+                        case 'STRONG': case 'B': textStyle = 'bold'; break; // Apply bold style
+                        case 'EM': case 'I': textStyle = 'italic'; break; // Apply italic style
+                        case 'P': elementMargin = 2; break; // Add space before paragraphs
                         case 'LI':
-                            prefix = '  • '; // Indent list items
-                            textContent = textContent.replace(/^\s*•\s*/, ''); // Remove existing bullet if any
-                            currentY += 1; // Smaller space for list items
+                            listPrefix = '• '; // Use bullet for lists
+                            elementMargin = 1; // Smaller space for list items
                             break;
                         case 'BLOCKQUOTE':
-                            prefix = '    '; // Indent blockquotes
-                            doc.setTextColor(100);
-                            currentY += 2;
+                            currentIndent += 5; // Indent blockquotes
+                            currentX = margin + currentIndent;
+                            elementColor = 100; // Grey text for quote
+                            elementMargin = 2;
                             break;
                         case 'HR':
+                            if (currentY + 4 > pageHeight - margin) { doc.addPage(); currentY = margin; } // Page break for HR
                             doc.setDrawColor(150);
-                            doc.line(margin, currentY, pageWidth - margin, currentY);
+                            doc.line(margin, currentY + 2, pageWidth - margin, currentY + 2);
                             currentY += 4;
                             return; // Don't process text for HR
-                        // Add cases for CODE, PRE etc. if needed
+                        case 'A':
+                            // Links: Add URL in parentheses or handle differently if needed
+                            textContent = `${textContent} (${element.href})`;
+                            elementColor = [0, 0, 255]; // Blue for links
+                            break;
+                        case 'CODE':
+                            // Basic code styling: Monospace font, maybe background?
+                            doc.setFont('Courier', 'normal'); // Use a monospace font
+                            fontSize = 10;
+                            // Background for inline code is hard without complex coordinates
+                            break;
+                        case 'PRE':
+                            // Preformatted text / Code blocks
+                            if (currentY + 10 > pageHeight - margin) { doc.addPage(); currentY = margin; } // Ensure space
+                            doc.setFont('Courier', 'normal');
+                            fontSize = 9;
+                            doc.setFillColor(240, 240, 240); // Light grey background
+                            // Calculate background dimensions (approximate)
+                            const preLines = doc.splitTextToSize(textContent, maxLineWidth - currentIndent);
+                            const preHeight = preLines.length * (fontSize * 0.35) + 2;
+                            doc.rect(currentX, currentY, maxLineWidth - currentIndent, preHeight, 'F');
+                            doc.setTextColor(0);
+                            doc.text(preLines, currentX + 1, currentY + fontSize * 0.35); // Add slight padding
+                            currentY += preHeight + 3;
+                            doc.setFont('Helvetica', 'normal'); // Reset font
+                            return; // Handled preformatted text
+                        // Add cases for UL, OL if specific styling is needed beyond LI handling
                     }
                     
-                    doc.setFontSize(fontSize);
-                    doc.setFont(undefined, isBold ? 'bold' : (isItalic ? 'italic' : 'normal'));
+                    currentY += elementMargin; // Add space before element
                     
-                    const lines = doc.splitTextToSize(prefix + textContent, maxLineWidth - (prefix ? 5 : 0)); // Adjust width for prefix
-                    doc.text(lines, margin + (prefix ? 5 : 0), currentY);
-                    currentY += lines.length * (fontSize * 0.35) + 2; // Calculate Y increment based on font size and line count
+                    // Handle elements with potential nested styling (strong/em within p/li)
+                    // This is complex with jsPDF's text(). A simpler approach is to process node children.
                     
-                    // Reset styles for next element (important for blockquotes)
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(0);
+                    // If element has children, process them recursively
+                    if (element.childNodes && element.childNodes.length > 0 && element.tagName !== 'PRE') {
+                        element.childNodes.forEach(child => {
+                            if (child.nodeType === Node.ELEMENT_NODE) {
+                                // Recursive call for element nodes
+                                addContentToPdf(child, currentIndent + (element.tagName === 'BLOCKQUOTE' ? 5 : 0)); // Pass indent
+                            } else if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
+                                // Process text nodes directly if they contain text
+                                const nodeText = child.textContent.trim();
+                                if (!nodeText) return;
+                                
+                                if (currentY > pageHeight - margin - 5) { doc.addPage(); currentY = margin; } // Check page break for text
+                                
+                                doc.setFontSize(fontSize);
+                                doc.setFont(undefined, textStyle); // Apply parent style for now
+                                doc.setTextColor(elementColor);
+                                
+                                // Apply list prefix if inside LI (check parent or context)
+                                let effectivePrefix = '';
+                                if (element.tagName === 'LI' || element.closest('li')) {
+                                    effectivePrefix = listPrefix;
+                                }
+                                
+                                const lines = doc.splitTextToSize(effectivePrefix + nodeText, maxLineWidth - currentIndent - (effectivePrefix ? 3 : 0));
+                                doc.text(lines, currentX + (effectivePrefix ? 3 : 0), currentY);
+                                currentY += lines.length * (fontSize * 0.35) + 1; // Adjust spacing based on lines
+                                
+                                // Reset potential temporary styles like color/font
+                                doc.setTextColor(0);
+                                doc.setFont('Helvetica', 'normal');
+                            }
+                        });
+                    } else if (textContent && element.tagName !== 'PRE') {
+                        // Handle simple elements with only text content
+                        if (currentY > pageHeight - margin - 5) { doc.addPage(); currentY = margin; } // Check page break
+                        
+                        doc.setFontSize(fontSize);
+                        doc.setFont(undefined, textStyle);
+                        doc.setTextColor(elementColor);
+                        
+                        const lines = doc.splitTextToSize(listPrefix + textContent, maxLineWidth - currentIndent - (listPrefix ? 3 : 0));
+                        doc.text(lines, currentX + (listPrefix ? 3 : 0), currentY);
+                        currentY += lines.length * (fontSize * 0.35) + 1; // Adjust spacing based on lines
+                        
+                        // Reset potential temporary styles like color/font
+                        doc.setTextColor(0);
+                        doc.setFont('Helvetica', 'normal');
+                    }
+                    
+                    // Reset indent if it was specific to this element (e.g., blockquote)
+                    // currentIndent management needs refinement for deeper nesting
                 }
                 
                 // Iterate through direct children of the summary container
                 summaryContainer.childNodes.forEach(node => {
                     if (node.nodeType === Node.ELEMENT_NODE) { // Process only element nodes
-                        addContentToPdf(node);
+                        addContentToPdf(node, 0); // Start with 0 indent
                     } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-                        // Handle top-level text nodes if any (wrap in a pseudo-element)
-                        addContentToPdf({ tagName: 'P', textContent: node.textContent });
+                        // Handle top-level text nodes if any (wrap in a pseudo-element for processing)
+                        addContentToPdf({ tagName: 'P', textContent: node.textContent }, 0);
                     }
                 });
                 
@@ -791,20 +888,31 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleLengthChange(e) {
         if (isLoading || !currentTranscription || !videoData) {
             // Don't regenerate if not ready or already loading
-            // Maybe re-enable the previously active button?
+            // Visually re-select the currently active button if click is ignored
+            summaryLengthButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.length === currentSummaryLength);
+                btn.classList.toggle('bg-[#E9E5D8]', btn.dataset.length === currentSummaryLength);
+                btn.classList.toggle('text-main', btn.dataset.length === currentSummaryLength);
+                btn.classList.toggle('font-medium', btn.dataset.length === currentSummaryLength);
+                btn.classList.toggle('bg-white', btn.dataset.length !== currentSummaryLength);
+                btn.classList.toggle('text-subtle', btn.dataset.length !== currentSummaryLength);
+            });
             return;
         }
         
         const newLength = e.target.dataset.length;
-        if (newLength === currentSummaryLength) return; // No change
+        if (!newLength || newLength === currentSummaryLength) return; // No change or invalid target
         
-        // Update button styles
+        // Update button styles immediately
         summaryLengthButtons.forEach(btn => {
-            btn.classList.remove('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
-            btn.classList.add('bg-white', 'text-subtle');
+            const isActive = btn.dataset.length === newLength;
+            btn.classList.toggle('active', isActive);
+            btn.classList.toggle('bg-[#E9E5D8]', isActive);
+            btn.classList.toggle('text-main', isActive);
+            btn.classList.toggle('font-medium', isActive);
+            btn.classList.toggle('bg-white', !isActive);
+            btn.classList.toggle('text-subtle', !isActive);
         });
-        e.target.classList.add('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
-        e.target.classList.remove('bg-white', 'text-subtle');
         
         currentSummaryLength = newLength; // Update state
         
@@ -814,21 +922,21 @@ document.addEventListener('DOMContentLoaded', function() {
         summaryContent.innerHTML = `<p class="flex items-center justify-center gap-2"><span class="loading-spinner !w-5 !h-5 !border-2"></span> ${languageSelect.value === 'fr' ? 'Recalcul du résumé...' : 'Recalculating summary...'}</p>`;
         
         try {
+            // Pass the *original* transcription, not the potentially truncated one used initially
             const summaryHtml = await summarizeWithBackend(currentTranscription, videoData, currentSummaryLength);
             if (!summaryHtml || summaryHtml.includes('Impossible de générer le résumé')) {
-                // Error handled inside, show original summary? Or keep error?
-                // For now, just display the error message returned
+                // Error handled inside, display the error message returned
                 displaySummary(summaryHtml || `<p class="text-red-600">${languageSelect.value === 'fr' ? 'Erreur lors du recalcul.' : 'Error recalculating.'}</p>`);
             } else {
-                displaySummary(summaryHtml);
-                showToast(`${languageSelect.value === 'fr' ? 'Résumé mis à jour' : 'Summary updated'} (${currentSummaryLength})`, 'success');
+                displaySummary(summaryHtml); // Display the new summary
+                showToast(`${languageSelect.value === 'fr' ? 'Résumé mis à jour' : 'Summary updated'} (${languageSelect.value === 'fr' ? (translations.fr[`length${capitalize(currentSummaryLength)}`] || currentSummaryLength) : (translations.en[`length${capitalize(currentSummaryLength)}`] || currentSummaryLength)})`, 'success'); // Show translated length name
             }
             
         } catch (error) {
             // Should be caught inside summarizeWithBackend, but just in case
             console.error("Erreur recalcul résumé:", error);
             showToast(languageSelect.value === 'fr' ? 'Erreur recalcul.' : 'Error recalculating.', 'error');
-            // Optionally restore previous summary?
+            // Optionally restore previous summary? For now, the error message stays.
             // displaySummary(currentSummary);
         } finally {
             isLoading = false;
@@ -836,6 +944,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Helper to capitalize first letter for translation keys
+    function capitalize(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
     
     // --- Event Listeners ---
     youtubeForm.addEventListener('submit', handleSubmit);
@@ -847,31 +960,50 @@ document.addEventListener('DOMContentLoaded', function() {
         pasteButton.addEventListener('click', () => {
             navigator.clipboard.readText()
                 .then(text => {
-                    youtubeUrl.value = text;
-                    youtubeUrl.focus(); // Focus the input after pasting
-                    // Optionally trigger submit or validation
-                    showToast(languageSelect.value === 'fr' ? 'Lien collé !' : 'Link pasted!', 'success');
+                    if (text) {
+                        youtubeUrl.value = text;
+                        youtubeUrl.focus(); // Focus the input after pasting
+                        // Optionally trigger validation or clear previous results slightly later
+                        showToast(languageSelect.value === 'fr' ? 'Lien collé !' : 'Link pasted!', 'success');
+                        // Maybe auto-submit if the user prefers?
+                        // handleSubmit(new Event('submit', { cancelable: true, bubbles: true }));
+                    } else {
+                        showToast(languageSelect.value === 'fr' ? 'Presse-papiers vide.' : 'Clipboard is empty.', 'info');
+                    }
                 })
                 .catch(err => {
                     console.error('Erreur lecture presse-papiers : ', err);
-                    showToast(languageSelect.value === 'fr' ? 'Impossible de coller. Vérifiez les autorisations.' : 'Could not paste. Check permissions.', 'error');
+                    // Provide more context about permissions if possible
+                    if (err.name === 'NotAllowedError') {
+                        showToast(languageSelect.value === 'fr' ? 'Autorisation requise pour coller.' : 'Permission needed to paste.', 'error');
+                    } else {
+                        showToast(languageSelect.value === 'fr' ? 'Impossible de coller.' : 'Could not paste.', 'error');
+                    }
                 });
         });
-    } else if (pasteButton && !navigator.clipboard) {
-        console.warn("API Clipboard non disponible (HTTPS requis?). Bouton Coller masqué.");
-        pasteButton.style.display = 'none'; // Hide if API not supported
+    } else if (pasteButton) {
+        // Hide or disable the button if Clipboard API is not available (e.g., non-HTTPS)
+        console.warn("API Clipboard non disponible (HTTPS requis?). Bouton Coller désactivé.");
+        pasteButton.disabled = true;
+        pasteButton.style.opacity = '0.5';
+        pasteButton.title = languageSelect.value === 'fr' ? "Fonctionnalité non disponible (HTTPS requis)" : "Feature unavailable (HTTPS required)";
     }
     
     // Listeners for Example Links
     exampleLinks.forEach(button => {
         button.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent potential default behavior if it's an <a> tag
             const url = e.currentTarget.dataset.url;
-            if (url) {
+            if (url && !isLoading) { // Only process if not already loading
                 youtubeUrl.value = url;
                 // Automatically submit the form when an example is clicked
-                handleSubmit(new Event('submit', { cancelable: true, bubbles: true }));
-                // Scroll to top smoothly to see loading indicator
+                // Create a synthetic event that bubbles and is cancelable
+                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                youtubeForm.dispatchEvent(submitEvent);
+                // Scroll to top smoothly to see loading indicator/results area
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (isLoading) {
+                showToast(languageSelect.value === 'fr' ? 'Veuillez attendre la fin du résumé actuel.' : 'Please wait for the current summary to finish.', 'info');
             }
         });
     });
@@ -881,222 +1013,263 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', handleLengthChange);
     });
     
+    // Store translations globally after definition
+    const translations = {
+        fr: {
+            title: "YouSummarize - Résumés Vidéo YouTube par IA",
+            h1: "YouTube Summary",
+            heroP: "Collez un lien YouTube, obtenez un résumé clair et concis. Gagnez du temps, comprenez plus vite.",
+            heroBadge: "Gratuit · Rapide · Aucune Inscription",
+            urlLabel: "Collez votre lien YouTube ici",
+            urlPlaceholder: "https://www.youtube.com/watch?v=...",
+            urlHelp: "Fonctionne avec les vidéos publiques disposant de sous-titres.",
+            submitBtn: "Générer le résumé",
+            languageLabel: "Langue:",
+            exampleTitle: "Ou essayez avec un exemple :",
+            loadingDefault: "Analyse en cours...",
+            loadingFewSecs: "Cela peut prendre quelques secondes.",
+            videoInfoTitle: "Résumé Généré", // Title above the summary itself
+            copyBtn: "Copier",
+            downloadBtn: "PDF",
+            lengthLabel: "Précision:",
+            lengthShort: "Court",
+            lengthMedium: "Moyen",
+            lengthLong: "Détaillé",
+            howWhyTitle: "Simple, Rapide, Efficace",
+            feature1Title: "Collez & Gagnez du Temps",
+            feature1Desc: "Entrez l'URL YouTube. Obtenez l'essentiel en quelques secondes, pas en heures.",
+            feature2Title: "Analyse IA & Idées Clés",
+            feature2Desc: "L'IA extrait les points importants. Comprenez les concepts clés facilement.",
+            feature3Title: "Résumé & Partage Facile",
+            feature3Desc: "Recevez un texte structuré. Copiez ou téléchargez pour partager vos trouvailles.",
+            faqTitle: "Questions Fréquentes",
+            ctaTitle: "Prêt à accélérer votre veille ?",
+            ctaP: "Arrêtez de perdre du temps. Collez votre premier lien YouTube maintenant.",
+            ctaBtn: "Essayer YouSummarize (Gratuit)",
+            ctaHelp: "Aucune inscription requise",
+            newsletterTitle: "Restez informé",
+            newsletterP: "Nouveautés et astuces occasionnelles.",
+            newsletterEmail: "votre.email@exemple.com",
+            newsletterBtn: "S'abonner",
+            footerBy: "par",
+            footerApi: "Documentation API",
+            footerPrivacy: "Confidentialité",
+            footerTerms: "Conditions",
+            footerContact: "Contact",
+            footerSitemap: "Plan du site",
+            bmcMessage: "Merci pour votre soutien ! Gardons ce service gratuit !"
+            
+        },
+        en: {
+            title: "YouSummarize - AI YouTube Video Summaries",
+            h1: "YouTube Summary",
+            heroP: "Paste a YouTube link, get a clear & concise summary. Save time, understand faster.",
+            heroBadge: "Free · Fast · No Sign-up",
+            urlLabel: "Paste your YouTube link here",
+            urlPlaceholder: "https://www.youtube.com/watch?v=...",
+            urlHelp: "Works with public videos that have subtitles.",
+            submitBtn: "Generate Summary",
+            languageLabel: "Language:",
+            exampleTitle: "Or try an example:",
+            loadingDefault: "Analyzing...",
+            loadingFewSecs: "This may take a few seconds.",
+            videoInfoTitle: "Generated Summary",
+            copyBtn: "Copy",
+            downloadBtn: "PDF",
+            lengthLabel: "Detail:",
+            lengthShort: "Short",
+            lengthMedium: "Medium",
+            lengthLong: "Detailed",
+            howWhyTitle: "Simple, Fast, Effective",
+            feature1Title: "Paste & Save Time",
+            feature1Desc: "Enter the YouTube URL. Get the gist in seconds, not hours.",
+            feature2Title: "AI Analysis & Key Insights",
+            feature2Desc: "AI extracts the important points. Understand key concepts easily.",
+            feature3Title: "Summary & Easy Sharing",
+            feature3Desc: "Receive structured text. Copy or download to share your findings.",
+            faqTitle: "Frequently Asked Questions",
+            ctaTitle: "Ready to speed up your learning?",
+            ctaP: "Stop wasting time. Paste your first YouTube link now.",
+            ctaBtn: "Try YouSummarize (Free)",
+            ctaHelp: "No sign-up required",
+            newsletterTitle: "Stay Informed",
+            newsletterP: "Occasional updates and tips.",
+            newsletterEmail: "your.email@example.com",
+            newsletterBtn: "Subscribe",
+            footerBy: "by",
+            footerApi: "API Docs",
+            footerPrivacy: "Privacy",
+            footerTerms: "Terms",
+            footerContact: "Contact",
+            footerSitemap: "Sitemap",
+            bmcMessage: "Thanks for your support! Let's keep this service free!"
+        },
+        es: { // Example Spanish - Needs full translation
+            title: "YouSummarize - Resúmenes IA de Vídeos de YouTube",
+            h1: "Resumen de YouTube",
+            heroP: "Pega un enlace de YouTube, obtén un resumen claro y conciso. Ahorra tiempo, entiende más rápido.",
+            heroBadge: "Gratis · Rápido · Sin Registro",
+            urlLabel: "Pega tu enlace de YouTube aquí",
+            urlPlaceholder: "https://www.youtube.com/watch?v=...",
+            urlHelp: "Funciona con videos públicos que tengan subtítulos.",
+            submitBtn: "Generar Resumen",
+            languageLabel: "Idioma:",
+            exampleTitle: "O prueba un ejemplo:",
+            loadingDefault: "Analizando...",
+            loadingFewSecs: "Esto puede tardar unos segundos.",
+            videoInfoTitle: "Resumen Generado",
+            copyBtn: "Copiar",
+            downloadBtn: "PDF",
+            lengthLabel: "Detalle:",
+            lengthShort: "Corto",
+            lengthMedium: "Medio",
+            lengthLong: "Detallado",
+            howWhyTitle: "Simple, Rápido, Eficaz",
+            feature1Title: "Pega y Ahorra Tiempo",
+            feature1Desc: "Introduce la URL de YouTube. Obtén lo esencial en segundos, no en horas.",
+            feature2Title: "Análisis IA e Ideas Clave",
+            feature2Desc: "La IA extrae los puntos importantes. Entiende los conceptos clave fácilmente.",
+            feature3Title: "Resumen y Fácil Compartir",
+            feature3Desc: "Recibe texto estructurado. Copia o descarga para compartir tus hallazgos.",
+            faqTitle: "Preguntas Frecuentes",
+            ctaTitle: "¿Listo para acelerar tu aprendizaje?",
+            ctaP: "Deja de perder tiempo. Pega tu primer enlace de YouTube ahora.",
+            ctaBtn: "Probar YouSummarize (Gratis)",
+            ctaHelp: "No requiere registro",
+            newsletterTitle: "Mantente Informado",
+            newsletterP: "Novedades y consejos ocasionales.",
+            newsletterEmail: "tu.email@ejemplo.com",
+            newsletterBtn: "Suscribirse",
+            footerBy: "por",
+            footerApi: "Documentación API",
+            footerPrivacy: "Privacidad",
+            footerTerms: "Términos",
+            footerContact: "Contacto",
+            footerSitemap: "Mapa del sitio",
+            bmcMessage: "¡Gracias por tu apoyo! ¡Mantengamos este servicio gratuito!"
+        }
+    };
     
-    // Language change - simple UI text update (could be more extensive)
+    // Language change - Apply translations
     languageSelect.addEventListener('change', function() {
         const lang = languageSelect.value;
-        // Basic text updates - could use a translation library for more complex apps
-        document.documentElement.lang = lang; // Update html lang attribute
-        const translations = {
-            fr: {
-                title: "YouSummarize - Résumés Vidéo YouTube par IA",
-                h1: "YouTube Summary",
-                heroP: "Collez un lien YouTube, obtenez un résumé clair et concis. Gagnez du temps, comprenez plus vite.",
-                heroBadge: "Gratuit · Rapide · Aucune Inscription",
-                urlLabel: "Collez votre lien YouTube ici",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                urlHelp: "Fonctionne avec les vidéos publiques disposant de sous-titres.",
-                submitBtn: "Générer le résumé",
-                languageLabel: "Langue:",
-                exampleTitle: "Ou essayez avec un exemple :",
-                loadingDefault: "Analyse en cours...",
-                loadingFewSecs: "Cela peut prendre quelques secondes.",
-                videoInfoTitle: "Résumé Généré", // Title above the summary itself
-                copyBtn: "Copier",
-                downloadBtn: "PDF",
-                lengthLabel: "Précision:",
-                lengthShort: "Court",
-                lengthMedium: "Moyen",
-                lengthLong: "Détaillé",
-                howWhyTitle: "Simple, Rapide, Efficace",
-                feature1Title: "Collez & Gagnez du Temps",
-                feature1Desc: "Entrez l'URL YouTube. Obtenez l'essentiel en quelques secondes, pas en heures.",
-                feature2Title: "Analyse IA & Idées Clés",
-                feature2Desc: "L'IA extrait les points importants. Comprenez les concepts clés facilement.",
-                feature3Title: "Résumé & Partage Facile",
-                feature3Desc: "Recevez un texte structuré. Copiez ou téléchargez pour partager vos trouvailles.",
-                faqTitle: "Questions Fréquentes",
-                ctaTitle: "Prêt à accélérer votre veille ?",
-                ctaP: "Arrêtez de perdre du temps. Collez votre premier lien YouTube maintenant.",
-                ctaBtn: "Essayer YouSummarize (Gratuit)",
-                ctaHelp: "Aucune inscription requise",
-                newsletterTitle: "Restez informé",
-                newsletterP: "Nouveautés et astuces occasionnelles.",
-                newsletterEmail: "votre.email@exemple.com",
-                newsletterBtn: "S'abonner",
-                footerBy: "par",
-                footerApi: "Documentation API",
-                footerPrivacy: "Confidentialité",
-                footerTerms: "Conditions",
-                footerContact: "Contact",
-                footerSitemap: "Plan du site",
-                bmcMessage: "Merci pour votre soutien ! Gardons ce service gratuit !"
-                
-            },
-            en: {
-                title: "YouSummarize - AI YouTube Video Summaries",
-                h1: "YouTube Summary",
-                heroP: "Paste a YouTube link, get a clear & concise summary. Save time, understand faster.",
-                heroBadge: "Free · Fast · No Sign-up",
-                urlLabel: "Paste your YouTube link here",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                urlHelp: "Works with public videos that have subtitles.",
-                submitBtn: "Generate Summary",
-                languageLabel: "Language:",
-                exampleTitle: "Or try an example:",
-                loadingDefault: "Analyzing...",
-                loadingFewSecs: "This may take a few seconds.",
-                videoInfoTitle: "Generated Summary",
-                copyBtn: "Copy",
-                downloadBtn: "PDF",
-                lengthLabel: "Detail:",
-                lengthShort: "Short",
-                lengthMedium: "Medium",
-                lengthLong: "Detailed",
-                howWhyTitle: "Simple, Fast, Effective",
-                feature1Title: "Paste & Save Time",
-                feature1Desc: "Enter the YouTube URL. Get the gist in seconds, not hours.",
-                feature2Title: "AI Analysis & Key Insights",
-                feature2Desc: "AI extracts the important points. Understand key concepts easily.",
-                feature3Title: "Summary & Easy Sharing",
-                feature3Desc: "Receive structured text. Copy or download to share your findings.",
-                faqTitle: "Frequently Asked Questions",
-                ctaTitle: "Ready to speed up your learning?",
-                ctaP: "Stop wasting time. Paste your first YouTube link now.",
-                ctaBtn: "Try YouSummarize (Free)",
-                ctaHelp: "No sign-up required",
-                newsletterTitle: "Stay Informed",
-                newsletterP: "Occasional updates and tips.",
-                newsletterEmail: "your.email@example.com",
-                newsletterBtn: "Subscribe",
-                footerBy: "by",
-                footerApi: "API Docs",
-                footerPrivacy: "Privacy",
-                footerTerms: "Terms",
-                footerContact: "Contact",
-                footerSitemap: "Sitemap",
-                bmcMessage: "Thanks for your support! Let's keep this service free!"
-            },
-            es: { // Example Spanish - Needs full translation
-                title: "YouSummarize - Resúmenes IA de Vídeos de YouTube",
-                h1: "Resumen de YouTube",
-                heroP: "Pega un enlace de YouTube, obtén un resumen claro y conciso. Ahorra tiempo, entiende más rápido.",
-                heroBadge: "Gratis · Rápido · Sin Registro",
-                urlLabel: "Pega tu enlace de YouTube aquí",
-                urlPlaceholder: "https://www.youtube.com/watch?v=...",
-                urlHelp: "Funciona con videos públicos que tengan subtítulos.",
-                submitBtn: "Generar Resumen",
-                languageLabel: "Idioma:",
-                exampleTitle: "O prueba un ejemplo:",
-                loadingDefault: "Analizando...",
-                loadingFewSecs: "Esto puede tardar unos segundos.",
-                videoInfoTitle: "Resumen Generado",
-                copyBtn: "Copiar",
-                downloadBtn: "PDF",
-                lengthLabel: "Detalle:",
-                lengthShort: "Corto",
-                lengthMedium: "Medio",
-                lengthLong: "Detallado",
-                howWhyTitle: "Simple, Rápido, Eficaz",
-                feature1Title: "Pega y Ahorra Tiempo",
-                feature1Desc: "Introduce la URL de YouTube. Obtén lo esencial en segundos, no en horas.",
-                feature2Title: "Análisis IA e Ideas Clave",
-                feature2Desc: "La IA extrae los puntos importantes. Entiende los conceptos clave fácilmente.",
-                feature3Title: "Resumen y Fácil Compartir",
-                feature3Desc: "Recibe texto estructurado. Copia o descarga para compartir tus hallazgos.",
-                faqTitle: "Preguntas Frecuentes",
-                ctaTitle: "¿Listo para acelerar tu aprendizaje?",
-                ctaP: "Deja de perder tiempo. Pega tu primer enlace de YouTube ahora.",
-                ctaBtn: "Probar YouSummarize (Gratis)",
-                ctaHelp: "No requiere registro",
-                newsletterTitle: "Mantente Informado",
-                newsletterP: "Novedades y consejos ocasionales.",
-                newsletterEmail: "tu.email@ejemplo.com",
-                newsletterBtn: "Suscribirse",
-                footerBy: "por",
-                footerApi: "Documentación API",
-                footerPrivacy: "Privacidad",
-                footerTerms: "Términos",
-                footerContact: "Contacto",
-                footerSitemap: "Mapa del sitio",
-                bmcMessage: "¡Gracias por tu apoyo! ¡Mantengamos este servicio gratuito!"
-            }
-        };
-        
-        const t = translations[lang] || translations['en']; // Fallback to English
-        
-        document.title = t.title;
-        document.querySelector('h1').textContent = t.h1;
-        document.querySelector('.max-w-3xl > p.text-subtle').textContent = t.heroP; // Hero P
-        document.querySelector('.max-w-3xl > p.font-semibold').textContent = t.heroBadge; // Hero Badge
-        document.querySelector('label[for="youtubeUrl"]').innerHTML = `<i class="fas fa-link accent" aria-hidden="true"></i> ${t.urlLabel}`;
-        youtubeUrl.placeholder = t.urlPlaceholder;
-        document.querySelector('#youtubeForm p.text-xs').textContent = t.urlHelp;
-        summarizeBtn.innerHTML = `<i class="fas fa-magic" aria-hidden="true"></i> ${t.submitBtn}`;
-        document.querySelector('label[for="language"]').textContent = t.languageLabel;
-        document.querySelector('.popular-examples h3').textContent = t.exampleTitle;
-        document.getElementById('loadingText').textContent = t.loadingDefault; // Update default loading text
-        document.querySelector('#loadingState p.text-xs').textContent = t.loadingFewSecs;
-        document.querySelector('#results h2.font-serif').textContent = t.videoInfoTitle;
-        copyBtn.innerHTML = `<i class="far fa-copy" aria-hidden="true"></i> ${t.copyBtn}`;
-        downloadBtn.innerHTML = `<i class="fas fa-download" aria-hidden="true"></i> ${t.downloadBtn}`;
-        document.querySelector('.summary-length .text-xs').textContent = t.lengthLabel;
-        document.querySelector('.btn-option[data-length="short"]').textContent = t.lengthShort;
-        document.querySelector('.btn-option[data-length="medium"]').textContent = t.lengthMedium;
-        document.querySelector('.btn-option[data-length="long"]').textContent = t.lengthLong;
-        
-        document.getElementById('how-and-why-title').textContent = t.howWhyTitle;
-        const features = document.querySelectorAll('.feature-card');
-        if(features.length >= 3) {
-            features[0].querySelector('h3').textContent = t.feature1Title;
-            features[0].querySelector('p').textContent = t.feature1Desc;
-            features[1].querySelector('h3').textContent = t.feature2Title;
-            features[1].querySelector('p').textContent = t.feature2Desc;
-            features[2].querySelector('h3').textContent = t.feature3Title;
-            features[2].querySelector('p').textContent = t.feature3Desc;
-        }
-        
-        document.getElementById('faq-title').textContent = t.faqTitle;
-        // Update FAQ text if needed (requires IDs or more specific selectors)
-        
-        document.getElementById('final-cta-title').textContent = t.ctaTitle;
-        document.querySelector('.cta-container p.text-lg').textContent = t.ctaP;
-        document.querySelector('.cta-actions a').textContent = t.ctaBtn;
-        document.querySelector('.cta-container p.text-xs').textContent = t.ctaHelp;
-        
-        document.querySelector('.newsletter h3').textContent = t.newsletterTitle;
-        document.querySelector('.newsletter-description').textContent = t.newsletterP;
-        document.querySelector('.newsletter-input').placeholder = t.newsletterEmail;
-        document.querySelector('.newsletter-button').textContent = t.newsletterBtn;
-        
-        const footerByLink = document.querySelector('footer a[href*="github.com/jp-fix"]');
-        if (footerByLink && footerByLink.previousSibling) footerByLink.previousSibling.textContent = ` ${t.footerBy} `; // Update 'par'/'by' text
-        
-        const footerLinks = document.querySelectorAll('footer .footer-links a');
-        if(footerLinks.length >= 5) {
-            footerLinks[0].textContent = t.footerApi;
-            footerLinks[1].textContent = t.footerPrivacy;
-            footerLinks[2].textContent = t.footerTerms;
-            footerLinks[3].textContent = t.footerContact;
-            footerLinks[4].textContent = t.footerSitemap;
-        }
-        
-        // Update BuyMeACoffee message if widget is present
-        const bmcWidget = document.querySelector('.bmc-widget-container');
-        if (bmcWidget && bmcWidget.dataset) {
-            bmcWidget.dataset.message = t.bmcMessage;
-            // Note: The widget might need reinitialization for the message to update visually
-            // if it's already rendered. This simple update might not work reliably.
-        }
-        
+        applyTranslations(lang);
         
         // If a summary exists, regenerate it in the new language
-        if (currentTranscription && videoData && !isLoading && results.classList.contains('hidden') === false) {
+        // Check if results area is visible and we are not currently loading/recalculating
+        if (currentTranscription && videoData && !isLoading && !results.classList.contains('hidden')) {
             console.log(`Language changed to ${lang}, regenerating summary.`);
-            // Use a flag to prevent re-triggering language change during regeneration?
-            handleLengthChange({ target: document.querySelector(`.btn-option[data-length="${currentSummaryLength}"]`) }); // Trigger regen with current length
+            // Find the currently active button to trigger handleLengthChange correctly
+            const activeLengthButton = document.querySelector('#results .btn-option.active') || document.querySelector(`.btn-option[data-length="${currentSummaryLength}"]`);
+            if (activeLengthButton) {
+                // Trigger handleLengthChange as if the current length button was clicked again
+                handleLengthChange({ target: activeLengthButton });
+            } else {
+                console.warn("Could not find active length button to trigger regeneration.");
+            }
+        } else if (isLoading){
+            console.log(`Language changed to ${lang}, but summary regeneration deferred until current process finishes.`);
+            // Optionally update loading text if needed:
+            updateLoadingState(translations[lang]?.loadingDefault || translations['en'].loadingDefault, parseInt(progressBar.style.width || '0'));
         }
     });
+    
+    function applyTranslations(lang) {
+        const t = translations[lang] || translations['en']; // Fallback to English
+        document.documentElement.lang = lang; // Update html lang attribute
+        
+        // Helper function to safely update text content
+        const setText = (selector, key) => {
+            const element = document.querySelector(selector);
+            if (element && t[key]) element.textContent = t[key];
+            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for selector '${selector}' in lang '${lang}'`);
+            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+        };
+        // Helper function to safely update inner HTML
+        const setHTML = (selector, key, prefix = '', suffix = '') => {
+            const element = document.querySelector(selector);
+            if (element && t[key]) element.innerHTML = `${prefix}${t[key]}${suffix}`;
+            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for selector '${selector}' in lang '${lang}'`);
+            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+        };
+        // Helper function to safely update attributes
+        const setAttr = (selector, attr, key) => {
+            const element = document.querySelector(selector);
+            if (element && t[key]) element.setAttribute(attr, t[key]);
+            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for attribute '${attr}' on selector '${selector}' in lang '${lang}'`);
+            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+        };
+        
+        // --- Apply translations using helpers ---
+        document.title = t.title;
+        setText('h1', 'h1');
+        setText('.max-w-3xl > p.text-subtle', 'heroP'); // Hero P
+        setText('.max-w-3xl > p.font-semibold', 'heroBadge'); // Hero Badge
+        setHTML('label[for="youtubeUrl"]', 'urlLabel', '<i class="fas fa-link accent" aria-hidden="true"></i> ');
+        setAttr('#youtubeUrl', 'placeholder', 'urlPlaceholder');
+        setText('#youtubeForm p.text-xs', 'urlHelp');
+        setHTML('#summarizeBtn', 'submitBtn', '<i class="fas fa-magic" aria-hidden="true"></i> ');
+        setText('label[for="language"]', 'languageLabel');
+        setText('.popular-examples h3', 'exampleTitle');
+        setText('#loadingText', 'loadingDefault'); // Update default loading text
+        setText('#loadingState p.text-xs', 'loadingFewSecs');
+        setText('#results h2.font-serif', 'videoInfoTitle');
+        setHTML('#copyBtn', 'copyBtn', '<i class="far fa-copy" aria-hidden="true"></i> ');
+        setHTML('#downloadBtn', 'downloadBtn', '<i class="fas fa-download" aria-hidden="true"></i> ');
+        setText('.summary-length .text-xs', 'lengthLabel');
+        setText('.btn-option[data-length="short"]', 'lengthShort');
+        setText('.btn-option[data-length="medium"]', 'lengthMedium');
+        setText('.btn-option[data-length="long"]', 'lengthLong');
+        
+        setText('#how-and-why-title', 'howWhyTitle');
+        const features = document.querySelectorAll('.feature-card');
+        if(features.length >= 3) {
+            setText('.feature-card:nth-of-type(1) h3', 'feature1Title');
+            setText('.feature-card:nth-of-type(1) p', 'feature1Desc');
+            setText('.feature-card:nth-of-type(2) h3', 'feature2Title');
+            setText('.feature-card:nth-of-type(2) p', 'feature2Desc');
+            setText('.feature-card:nth-of-type(3) h3', 'feature3Title');
+            setText('.feature-card:nth-of-type(3) p', 'feature3Desc');
+        }
+        
+        setText('#faq-title', 'faqTitle');
+        // Update FAQ text if needed (requires IDs or more specific selectors for Q&A pairs)
+        
+        setText('#final-cta-title', 'ctaTitle');
+        setText('.cta-container p.text-lg', 'ctaP');
+        setText('.cta-actions a', 'ctaBtn');
+        setText('.cta-container p.text-xs', 'ctaHelp');
+        
+        setText('.newsletter h3', 'newsletterTitle');
+        setText('.newsletter-description', 'newsletterP');
+        setAttr('.newsletter-input', 'placeholder', 'newsletterEmail');
+        setText('.newsletter-button', 'newsletterBtn');
+        
+        const footerByLink = document.querySelector('footer a[href*="github.com/jp-fix"]');
+        if (footerByLink && footerByLink.previousSibling && footerByLink.previousSibling.nodeType === Node.TEXT_NODE) {
+            footerByLink.previousSibling.textContent = ` ${t.footerBy} `; // Update 'par'/'by' text node
+        }
+        
+        // Update footer links by their assumed order or more specific selectors/IDs
+        setText('footer .footer-links a:nth-of-type(1)', 'footerApi');
+        setText('footer .footer-links a:nth-of-type(2)', 'footerPrivacy');
+        setText('footer .footer-links a:nth-of-type(3)', 'footerTerms');
+        setText('footer .footer-links a:nth-of-type(4)', 'footerContact');
+        setText('footer .footer-links a:nth-of-type(5)', 'footerSitemap');
+        
+        // Update BuyMeACoffee message if widget is present and uses data-message
+        const bmcWidget = document.querySelector('.bmc-widget-container');
+        if (bmcWidget && bmcWidget.dataset && t.bmcMessage) {
+            bmcWidget.dataset.message = t.bmcMessage;
+            // Note: The widget might need reinitialization for the message to update visually
+            // if it's already rendered. This simple update might not work reliably without widget API.
+        }
+        
+        // Update paste button title if it was disabled
+        if (pasteButton && pasteButton.disabled) {
+            pasteButton.title = t.pasteButtonDisabledTitle || "Feature unavailable (HTTPS required)";
+        }
+    }
     
     
     // --- Initialisation ---
@@ -1106,13 +1279,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const browserLang = navigator.language || navigator.userLanguage || 'en';
         const langCode = browserLang.split('-')[0]; // Get 'fr' from 'fr-FR'
         
-        if (languageSelect.options.namedItem(langCode)) {
+        // Check if the detected language is available in the select options
+        if (Array.from(languageSelect.options).some(option => option.value === langCode)) {
             languageSelect.value = langCode;
         } else {
             languageSelect.value = 'en'; // Default to English if browser lang not supported
         }
-        // Trigger change event to apply initial language settings
-        languageSelect.dispatchEvent(new Event('change'));
+        // Trigger change event manually to apply initial language settings from detection
+        applyTranslations(languageSelect.value);
     }
     
     // Update current year in footer
@@ -1122,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initial setup
-    detectBrowserLanguage();
+    detectBrowserLanguage(); // Detect language and apply translations
     resetUI(); // Ensure clean state on load
     
     console.log("YouSummarize App Initialized.");
