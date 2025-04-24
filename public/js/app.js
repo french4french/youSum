@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function extractVideoId(url) {
         if (!url) return null;
         url = url.trim();
-        // Flexible regex to catch video IDs from various URL patterns
         const regex = /(?:v=|v\/|embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|\?v=|\&v=)([^#\&\?]{11})/;
         const match = url.match(regex);
         return match ? match[1] : null;
@@ -65,15 +64,16 @@ document.addEventListener('DOMContentLoaded', function() {
      * @returns {Promise<object>} Object containing video details.
      */
     async function fetchVideoInfo(videoId) {
-        updateLoadingState('Récupération des infos vidéo...', 10);
+        updateLoadingState(getText('fetchingVideoInfo', 'Récupération des infos vidéo...'), 10);
         try {
             const response = await fetch(`${API_BASE_URL}/api/video-info?videoId=${videoId}`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: `Erreur HTTP: ${response.status}` }));
-                throw new Error(errorData.error || `Erreur HTTP: ${response.status}`);
+                // Use translated error message
+                throw new Error(errorData.error || getText('httpError', 'Erreur HTTP:') + ` ${response.status}`);
             }
             const data = await response.json();
-            console.log("Video Info Raw:", data); // Debug log
+            console.log("Video Info Raw:", data);
             
             if (data.items && data.items.length > 0) {
                 const snippet = data.items[0].snippet;
@@ -84,24 +84,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     channelTitle: snippet.channelTitle,
                     publishedAt: snippet.publishedAt ? new Date(snippet.publishedAt) : null,
                     description: snippet.description,
-                    // Use standard or high quality thumbnail if available
                     thumbnail: snippet.thumbnails?.standard?.url || snippet.thumbnails?.high?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-                    duration: contentDetails?.duration ? convertDuration(contentDetails.duration) : 'Inconnue'
+                    duration: contentDetails?.duration ? convertDuration(contentDetails.duration) : getText('unknown', 'Inconnue')
                 };
             }
-            throw new Error('Vidéo non trouvée ou informations manquantes.');
+            // Use translated error message
+            throw new Error(getText('videoNotFound', 'Vidéo non trouvée ou informations manquantes.'));
         } catch (error) {
             console.error('Erreur fetchVideoInfo:', error);
-            showToast(`Erreur infos vidéo: ${error.message}`, 'error');
-            // Provide a fallback object so the UI doesn't completely break
-            return {
+            // Use translated error message prefix
+            showToast(`${getText('errorVideoInfo', 'Erreur infos vidéo')}: ${error.message}`, 'error');
+            return { // Fallback object
                 id: videoId,
-                title: 'Vidéo YouTube (Infos Indisponibles)',
-                channelTitle: 'Chaîne inconnue',
+                title: getText('videoInfoUnavailable', 'Vidéo YouTube (Infos Indisponibles)'),
+                channelTitle: getText('unknownChannel', 'Chaîne inconnue'),
                 publishedAt: null,
                 description: '',
                 thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-                duration: 'Inconnue'
+                duration: getText('unknown', 'Inconnue')
             };
         }
     }
@@ -112,9 +112,10 @@ document.addEventListener('DOMContentLoaded', function() {
      * @returns {string} Readable duration (e.g., "1h 23m 45s").
      */
     function convertDuration(duration) {
-        if (!duration || typeof duration !== 'string') return 'Inconnue';
+        const unknownText = getText('unknown', 'Inconnue');
+        if (!duration || typeof duration !== 'string') return unknownText;
         const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-        if (!match) return 'Inconnue';
+        if (!match) return unknownText;
         
         const hours = parseInt(match[1] || 0);
         const minutes = parseInt(match[2] || 0);
@@ -122,10 +123,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let result = '';
         if (hours > 0) result += `${hours}h `;
-        if (minutes > 0 || hours > 0) result += `${String(minutes).padStart(hours > 0 ? 2 : 1, '0')}m `; // Pad minutes if hours exist
-        result += `${String(seconds).padStart(2, '0')}s`; // Always show seconds, padded
+        if (minutes > 0 || hours > 0) result += `${String(minutes).padStart(hours > 0 ? 2 : 1, '0')}m `;
+        result += `${String(seconds).padStart(2, '0')}s`;
         
-        return result.trim() || "0s"; // Return "0s" if duration is zero
+        return result.trim() || "0s";
     }
     
     /**
@@ -135,31 +136,31 @@ document.addEventListener('DOMContentLoaded', function() {
      * @returns {Promise<string|null>} The transcript text or null on failure.
      */
     async function getTranscription(videoId, language = 'fr') {
-        updateLoadingState(`Récupération de la transcription (${language})...`, 30);
+        updateLoadingState(getText('fetchingTranscript', 'Récupération de la transcription ({lang})...').replace('{lang}', language), 30);
         try {
             const response = await fetch(`${API_BASE_URL}/api/transcript?videoId=${videoId}&language=${language}`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: `Erreur HTTP: ${response.status}` }));
-                // Provide more specific error messages
+                // Provide more specific error messages using translations
                 if (response.status === 404) {
-                    throw new Error(`Transcription non trouvée pour la langue '${language}'. Essayez une autre langue si disponible.`);
-                } else if (response.status === 400 && errorData.error.includes('subtitles disabled')) {
-                    throw new Error('Les sous-titres sont désactivés pour cette vidéo.');
+                    throw new Error(getText('transcriptNotFoundLang', "Transcription non trouvée pour la langue '{lang}'. Essayez une autre langue si disponible.").replace('{lang}', language));
+                } else if (response.status === 400 && errorData.error && errorData.error.includes('subtitles disabled')) {
+                    throw new Error(getText('subtitlesDisabled', 'Les sous-titres sont désactivés pour cette vidéo.'));
                 }
-                throw new Error(errorData.error || `Erreur serveur (${response.status})`);
+                throw new Error(errorData.error || getText('serverError', 'Erreur serveur') + ` (${response.status})`);
             }
             const data = await response.json();
-            updateLoadingState('Transcription récupérée...', 70);
+            updateLoadingState(getText('transcriptRetrieved', 'Transcription récupérée...'), 70);
             if (data.transcript) {
                 return data.transcript;
             } else {
                 // This case might happen if the backend sends a 200 OK but with an error message
-                throw new Error(data.error || 'Format de réponse de transcription invalide.');
+                throw new Error(data.error || getText('invalidTranscriptFormat', 'Format de réponse de transcription invalide.'));
             }
         } catch (error) {
             console.error('Erreur getTranscription:', error);
-            showToast(`Erreur transcription: ${error.message}`, 'error');
-            updateLoadingState('Échec transcription', 70); // Keep progress visually
+            showToast(`${getText('errorTranscript', 'Erreur transcription')}: ${error.message}`, 'error');
+            updateLoadingState(getText('transcriptFailed', 'Échec transcription'), 70);
             return null; // Indicate failure
         }
     }
@@ -169,14 +170,13 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} transcription - The video transcript text.
      * @param {object} videoInfo - Metadata object for context.
      * @param {string} lengthPreference - 'short', 'medium', or 'long'.
-     * @returns {Promise<string|null>} The summarized text in HTML format or null on failure.
+     * @returns {Promise<string>} The summarized text in HTML format, OR an error message in HTML format.
      */
     async function summarizeWithBackend(transcription, videoInfo, lengthPreference = 'medium') {
-        updateLoadingState('Génération du résumé IA...', 85);
+        updateLoadingState(getText('generatingAISummary', 'Génération du résumé IA...'), 85);
         const language = languageSelect.value;
         
-        // Simple truncation (backend should ideally handle this more gracefully)
-        const MAX_CHARS = 120000; // Increased limit slightly
+        const MAX_CHARS = 120000;
         const isTruncated = transcription.length > MAX_CHARS;
         const truncatedTranscription = isTruncated
             ? transcription.substring(0, MAX_CHARS) + "... [Transcription tronquée côté client]"
@@ -188,42 +188,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     transcription: truncatedTranscription,
-                    videoInfo: { // Send relevant info
-                        title: videoInfo?.title || 'Titre inconnu',
-                        channelTitle: videoInfo?.channelTitle || 'Chaîne inconnue'
-                        // Avoid sending dates or complex objects unless necessary
+                    videoInfo: {
+                        title: videoInfo?.title || getText('unknownTitle', 'Titre inconnu'),
+                        channelTitle: videoInfo?.channelTitle || getText('unknownChannel', 'Chaîne inconnue')
                     },
                     language: language,
-                    lengthPreference: lengthPreference // Send length preference
+                    lengthPreference: lengthPreference
                 })
             });
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: `Erreur HTTP: ${response.status}` }));
-                throw new Error(errorData.error || `Erreur serveur (${response.status})`);
+                throw new Error(errorData.error || getText('serverError', 'Erreur serveur') + ` (${response.status})`);
             }
             
             const data = await response.json();
-            updateLoadingState('Résumé reçu !', 100);
+            updateLoadingState(getText('summaryReceived', 'Résumé reçu !'), 100);
             
             if (data.summary) {
-                // Add truncation warning if applicable
                 const warningPrefix = isTruncated
                     ? (language === 'fr'
                         ? "<p><strong>⚠️ Attention :</strong> La transcription était très longue et a été tronquée avant l'analyse. Le résumé peut être incomplet.</p><hr>"
                         : "<p><strong>⚠️ Warning:</strong> The transcript was very long and was truncated before analysis. The summary may be incomplete.</p><hr>")
                     : "";
-                // Assume backend returns markdown, convert it
                 return warningPrefix + markdownToHtml(data.summary);
             } else {
-                throw new Error(data.error || 'Aucun résumé retourné par le serveur.');
+                // --- *** MODIFICATION START *** ---
+                // Handle case where backend returns 200 OK but no summary
+                console.error("Backend returned OK but no summary. Response data:", data); // Log for debugging
+                const backendErrorMsg = data.error; // Get potential error message from backend
+                const userMessage = backendErrorMsg
+                    ? (language === 'fr' ? `Erreur du serveur: ${backendErrorMsg}` : `Server Error: ${backendErrorMsg}`)
+                    // Specific translated message for this scenario
+                    : getText('summaryGenerationFailed', 'Le serveur a répondu mais n\'a pas pu générer de résumé pour cette vidéo.');
+                
+                showToast(userMessage, 'error'); // Show toast immediately
+                
+                // Return the error message formatted as HTML instead of throwing
+                return `<p class="text-red-600"><strong>${getText('error', 'Erreur')}:</strong> ${userMessage}</p>`;
+                // --- *** MODIFICATION END *** ---
             }
         } catch (error) {
+            // Catch errors from fetch itself or non-OK responses
             console.error('Erreur summarizeWithBackend:', error);
-            showToast(`Erreur résumé: ${error.message}`, 'error');
-            updateLoadingState('Échec résumé', 100);
-            // Provide a fallback error message in HTML
-            return `<p class="text-red-600"><strong>${language === 'fr' ? 'Erreur' : 'Error'}:</strong> ${language === 'fr' ? 'Impossible de générer le résumé.' : 'Could not generate summary.'} ${error.message}</p>`;
+            showToast(`${getText('errorSummary', 'Erreur résumé')}: ${error.message}`, 'error');
+            updateLoadingState(getText('summaryFailed', 'Échec résumé'), 100);
+            // Return a fallback error message in HTML
+            return `<p class="text-red-600"><strong>${getText('error', 'Erreur')}:</strong> ${getText('couldNotGenerateSummary', 'Impossible de générer le résumé.')} ${error.message}</p>`;
         }
     }
     
@@ -262,13 +273,14 @@ document.addEventListener('DOMContentLoaded', function() {
         html = html.replace(/^(?:---|\*\*\*)\s*$/gm, '<hr>');
         
         // Unordered Lists (* item or - item) - Improved handling
-        html = html.replace(/^\s*([*-]) (.*?)($|\n(?!\s*[*-] ))/gim, (match, marker, item) => `<li>${item.trim()}</li>`);
-        html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => `<ul>${match.trim()}</ul>\n`); // Wrap consecutive list items
+        // Match list items possibly separated by single newlines
+        html = html.replace(/^\s*([*-]) (.*?)(\n(?=\s*[*-] )|$)/gim, (match, _marker, item) => `<li>${item.trim()}</li>\n`);
+        html = html.replace(/(?:<li>.*?<\/li>\s*)+/gs, (match) => `<ul>\n${match.trim()}\n</ul>\n`); // Wrap consecutive list items
         html = html.replace(/<\/ul>\s*\n?<ul>/g, ''); // Merge consecutive lists
         
         // Ordered Lists (1. item) - Improved handling
-        html = html.replace(/^\s*\d+\. (.*?)($|\n(?!\s*\d+\. ))/gim, (match, item) => `<li>${item.trim()}</li>`);
-        html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => `<ol>${match.trim()}</ol>\n`); // Wrap consecutive list items
+        html = html.replace(/^\s*\d+\. (.*?)(\n(?=\s*\d+\. )|$)/gim, (match, item) => `<li>${item.trim()}</li>\n`);
+        html = html.replace(/(?:<li>.*?<\/li>\s*)+/gs, (match) => `<ol>\n${match.trim()}\n</ol>\n`); // Wrap consecutive list items
         html = html.replace(/<\/ol>\s*\n?<ol>/g, ''); // Merge consecutive ordered lists
         
         
@@ -280,12 +292,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (paragraph.match(/^<(?:ul|ol|li|h[1-6]|block|pre|hr|table|thead|tbody|tr|th|td)/i)) {
                 return paragraph;
             }
-            // Also avoid wrapping paragraphs that are just list items (already handled)
+            // Don't wrap list items that might be separated by \n\n
             if (paragraph.startsWith('<li>') && paragraph.endsWith('</li>')) {
-                return paragraph; // Let list wrapping handle this
+                return paragraph;
             }
             return `<p>${paragraph}</p>`;
-        }).join('\n\n'); // Join with double newline to preserve separation
+        }).join('\n'); // Join with single newline
         
         // Inline Elements (applied within block elements now)
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'); // Links
@@ -293,16 +305,15 @@ document.addEventListener('DOMContentLoaded', function() {
         html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
         html = html.replace(/`([^`]+)`/g, '<code>$1</code>'); // Inline Code
         
-        // Line Breaks (convert single newlines within paragraphs/lists to <br>)
-        html = html.replace(/<p>(.*?)<\/p>/gs, (match, content) => `<p>${content.replace(/\n/g, '<br>')}</p>`);
-        html = html.replace(/<li>(.*?)<\/li>/gs, (match, content) => `<li>${content.replace(/\n/g, '<br>')}</li>`);
-        // Add similar replacements for other block elements if needed (e.g., blockquotes)
+        // Line Breaks (convert single newlines within appropriate blocks to <br>)
+        html = html.replace(/<(p|li|blockquote)>(.*?)<\/\1>/gs, (match, tag, content) => `<${tag}>${content.replace(/\n/g, '<br>')}</${tag}>`);
+        
         
         // Cleanup potential artifacts
         html = html.replace(/<br>\s*<\/(ul|ol|li|h[1-6]|blockquote|pre|p)>/g, '</$1>'); // Remove <br> before closing block tags
         html = html.replace(/<(ul|ol|li|h[1-6]|blockquote|pre|p)>\s*<br>/g, '<$1>'); // Remove <br> after opening block tags
         html = html.replace(/<p>\s*<\/p>/g, ''); // Remove empty paragraphs
-        html = html.replace(/\n\n/g, '\n'); // Consolidate excessive newlines between blocks
+        // html = html.replace(/\n\n/g, '\n'); // Consolidate excessive newlines between blocks - might remove intended spacing
         
         
         return html.trim();
@@ -314,23 +325,25 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {'info' | 'success' | 'error'} [type='info'] - The type of toast.
      */
     function showToast(message, type = 'info') {
-        if (toastTimeout) clearTimeout(toastTimeout); // Clear previous timeout if any
+        if (toastTimeout) clearTimeout(toastTimeout);
         
         toastMessage.textContent = message;
-        toast.className = 'fixed bottom-5 right-5 bg-main text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 text-sm opacity-0 translate-y-3 transition-all duration-300 ease-out z-50'; // Reset classes
+        // Base classes + transition classes
+        toast.className = 'fixed bottom-5 right-5 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 text-sm opacity-0 translate-y-3 transition-all duration-300 ease-out z-50';
         toastIcon.className = 'fas'; // Reset icon class
         
+        // Add color class based on type
         switch (type) {
             case 'error':
-                toast.classList.add('bg-red-600'); // Use Tailwind red for error
+                toast.classList.add('bg-red-600');
                 toastIcon.classList.add('fa-exclamation-circle');
                 break;
             case 'success':
-                toast.classList.add('bg-green-600'); // Use Tailwind green for success
+                toast.classList.add('bg-green-600');
                 toastIcon.classList.add('fa-check-circle');
                 break;
             default: // 'info'
-                toast.classList.add('bg-blue-600'); // Use Tailwind blue for info
+                toast.classList.add('bg-blue-600');
                 toastIcon.classList.add('fa-info-circle');
                 break;
         }
@@ -341,13 +354,10 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.classList.add('opacity-100', 'translate-y-0');
         });
         
-        
         // Hide after 3 seconds
         toastTimeout = setTimeout(() => {
             toast.classList.remove('opacity-100', 'translate-y-0');
             toast.classList.add('opacity-0', 'translate-y-3');
-            // Optional: Reset classes after hiding animation completes
-            // setTimeout(() => { toast.className = '... initial hidden classes ...'; }, 300);
         }, 3000);
     }
     
@@ -357,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {number} percent - The progress percentage (0-100).
      */
     function updateLoadingState(text, percent) {
-        if (loadingState.classList.contains('hidden')) return; // Don't update if not visible
+        if (loadingState.classList.contains('hidden')) return;
         loadingText.textContent = text;
         progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
     }
@@ -368,14 +378,15 @@ document.addEventListener('DOMContentLoaded', function() {
      * @returns {string} Formatted date string or a fallback.
      */
     function formatDate(dateInput) {
-        if (!dateInput) return 'Date inconnue';
+        const unknownDateText = getText('unknownDate', 'Date inconnue');
+        const invalidDateText = getText('invalidDate', 'Date invalide');
+        if (!dateInput) return unknownDateText;
         try {
             const date = new Date(dateInput);
-            // Check if date is valid
             if (isNaN(date.getTime())) {
-                return 'Date invalide';
+                return invalidDateText;
             }
-            const lang = languageSelect.value === 'fr' ? 'fr-FR' : 'en-US';
+            const lang = languageSelect.value === 'fr' ? 'fr-FR' : languageSelect.value === 'es' ? 'es-ES' : 'en-US'; // Add other locales as needed
             return date.toLocaleDateString(lang, {
                 year: 'numeric',
                 month: 'long',
@@ -383,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (e) {
             console.error("Error formatting date:", dateInput, e);
-            return 'Date invalide';
+            return invalidDateText;
         }
     }
     
@@ -392,19 +403,19 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {object} data - The video data object from fetchVideoInfo.
      */
     function displayVideoInfo(data) {
-        videoData = data; // Store globally for later use (e.g., download)
+        videoData = data;
         if (!data || !data.id) {
             videoInfo.classList.add('hidden');
             return;
         }
-        videoThumbnail.src = data.thumbnail || `https://img.youtube.com/vi/${data.id}/hqdefault.jpg`; // Fallback thumb
-        videoThumbnail.alt = `Miniature de la vidéo: ${data.title || 'Vidéo YouTube'}`;
-        videoTitle.textContent = data.title || 'Titre indisponible';
-        channelTitle.textContent = data.channelTitle || 'Chaîne inconnue';
+        videoThumbnail.src = data.thumbnail || `https://img.youtube.com/vi/${data.id}/hqdefault.jpg`;
+        videoThumbnail.alt = `${getText('thumbnailAltPrefix', 'Miniature de la vidéo:')} ${data.title || getText('youtubeVideo', 'Vidéo YouTube')}`;
+        videoTitle.textContent = data.title || getText('titleUnavailable', 'Titre indisponible');
+        channelTitle.textContent = data.channelTitle || getText('unknownChannel', 'Chaîne inconnue');
         publishedDate.textContent = formatDate(data.publishedAt);
-        videoDuration.textContent = data.duration || 'Inconnue';
+        videoDuration.textContent = data.duration || getText('unknown', 'Inconnue');
         videoLink.href = `https://www.youtube.com/watch?v=${data.id}`;
-        videoInfo.classList.remove('hidden'); // Show the info card
+        videoInfo.classList.remove('hidden');
     }
     
     /**
@@ -412,10 +423,9 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} summaryHtml - The summary content (HTML).
      */
     function displaySummary(summaryHtml) {
-        currentSummary = summaryHtml; // Store for copy/download
-        summaryContent.innerHTML = summaryHtml || `<p>${languageSelect.value === 'fr' ? 'Aucun résumé généré.' : 'No summary generated.'}</p>`;
-        results.classList.remove('hidden'); // Show results card
-        // Scroll to results smoothly
+        currentSummary = summaryHtml; // Store even if it's an error message
+        summaryContent.innerHTML = summaryHtml || `<p>${getText('noSummaryGenerated', 'Aucun résumé généré.')}</p>`;
+        results.classList.remove('hidden');
         results.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     
@@ -428,25 +438,24 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingState.classList.add('hidden');
         summarizeBtn.disabled = false;
         isLoading = false;
-        // updateProgressBar(0); // <<-- ERROR WAS HERE
-        progressBar.style.width = '0%'; // <<-- FIX: Directly reset progress bar style
+        progressBar.style.width = '0%'; // Reset progress bar style
         summaryContent.innerHTML = '';
-        videoThumbnail.src = ''; // Clear previous thumbnail
-        // Do NOT clear the youtubeUrl input field automatically
+        videoThumbnail.src = '';
         currentVideoId = null;
         videoData = null;
         currentTranscription = null;
         currentSummary = null;
         currentSummaryLength = 'medium'; // Reset length state
         
-        // Reset active state on length buttons (optional but good practice)
+        // Reset active state on length buttons
         summaryLengthButtons.forEach((btn) => {
-            btn.classList.remove('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
-            btn.classList.add('bg-white', 'text-subtle');
-            if (btn.dataset.length === 'medium') { // Reset to medium visually
-                btn.classList.add('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
-                btn.classList.remove('bg-white', 'text-subtle');
-            }
+            const isMedium = btn.dataset.length === 'medium';
+            btn.classList.toggle('active', isMedium);
+            btn.classList.toggle('bg-[#E9E5D8]', isMedium);
+            btn.classList.toggle('text-main', isMedium);
+            btn.classList.toggle('font-medium', isMedium);
+            btn.classList.toggle('bg-white', !isMedium);
+            btn.classList.toggle('text-subtle', !isMedium);
         });
     }
     
@@ -455,85 +464,83 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {Event} e - The form submission event.
      */
     async function handleSubmit(e) {
-        e.preventDefault(); // Prevent default form submission
-        if (isLoading) return; // Prevent concurrent requests
+        e.preventDefault();
+        if (isLoading) return;
         
         const url = youtubeUrl.value.trim();
         if (!url) {
-            showToast(languageSelect.value === 'fr' ? 'Veuillez entrer une URL YouTube.' : 'Please enter a YouTube URL.', 'error');
+            showToast(getText('enterUrl', 'Veuillez entrer une URL YouTube.'), 'error');
             youtubeUrl.focus();
             return;
         }
         
-        // Extract video ID
         const videoId = extractVideoId(url);
         if (!videoId) {
-            showToast(languageSelect.value === 'fr' ? 'URL YouTube invalide ou non reconnue.' : 'Invalid or unrecognized YouTube URL.', 'error');
+            showToast(getText('invalidUrl', 'URL YouTube invalide ou non reconnue.'), 'error');
             youtubeUrl.focus();
             return;
         }
         
-        // Start loading state
         isLoading = true;
-        resetUI(); // Clear previous results before starting
+        resetUI(); // Reset before starting
         loadingState.classList.remove('hidden');
         summarizeBtn.disabled = true;
-        updateLoadingState(languageSelect.value === 'fr' ? 'Validation de l\'URL...' : 'Validating URL...', 5);
-        currentVideoId = videoId; // Store the ID
+        updateLoadingState(getText('validatingUrl', 'Validation de l\'URL...'), 5);
+        currentVideoId = videoId;
         
         try {
             // 1. Fetch Video Info
             const fetchedVideoData = await fetchVideoInfo(videoId);
-            if (!fetchedVideoData || fetchedVideoData.title.includes('Infos Indisponibles')) { // Check if fallback was used meaningfully or real error occurred
-                // If fetchVideoInfo returns the fallback object, display it but warn
-                if(fetchedVideoData && fetchedVideoData.title.includes('Infos Indisponibles')){
-                    displayVideoInfo(fetchedVideoData); // Display minimal info
-                    showToast(languageSelect.value === 'fr' ? 'Infos vidéo limitées récupérées.' : 'Limited video info retrieved.', 'info');
-                } else {
-                    // If fetchVideoInfo truly failed (e.g., network error before returning fallback)
-                    throw new Error(languageSelect.value === 'fr' ? 'Impossible de récupérer les informations de base de la vidéo.' : 'Could not retrieve basic video information.');
-                }
-            } else {
-                displayVideoInfo(fetchedVideoData); // Display full info
+            // Display even if info is limited (fallback object returned)
+            displayVideoInfo(fetchedVideoData);
+            // Show a warning if the info was limited (check based on fallback title)
+            if (fetchedVideoData.title === getText('videoInfoUnavailable', 'Vidéo YouTube (Infos Indisponibles)')) {
+                showToast(getText('limitedVideoInfo', 'Infos vidéo limitées récupérées.'), 'info');
             }
-            
             
             // 2. Get Transcription
             currentTranscription = await getTranscription(videoId, languageSelect.value);
             if (!currentTranscription) {
                 // Error handled within getTranscription (toast shown)
-                throw new Error('SKIP_TO_FINALLY'); // Use a specific signal to stop processing but enable button
+                throw new Error('SKIP_TO_FINALLY');
             }
             
-            // 3. Generate Summary (using current length preference)
+            // 3. Generate Summary
+            // summarizeWithBackend now returns either summary HTML or error HTML
             const summaryHtml = await summarizeWithBackend(currentTranscription, videoData, currentSummaryLength);
-            if (!summaryHtml || summaryHtml.includes('Impossible de générer le résumé')) {
-                // Error handled within summarizeWithBackend (toast shown), display the error message itself
-                displaySummary(summaryHtml || `<p class="text-red-600">${languageSelect.value === 'fr' ? 'Erreur lors de la génération du résumé.' : 'Error generating summary.'}</p>`);
-                throw new Error('SKIP_TO_FINALLY'); // Stop further success messages but keep UI enabled
-            }
             
-            // 4. Display Summary
+            // --- *** MODIFICATION START *** ---
+            // Display whatever HTML was returned (summary or error message)
             displaySummary(summaryHtml);
-            showToast(languageSelect.value === 'fr' ? 'Résumé généré avec succès !' : 'Summary generated successfully!', 'success');
+            
+            // Check if the returned HTML indicates an error (based on our error format)
+            // If it's NOT an error, show the success toast.
+            if (!summaryHtml || !summaryHtml.includes('<p class="text-red-600">')) {
+                showToast(getText('summaryGeneratedSuccess', 'Résumé généré avec succès !'), 'success');
+            } else {
+                // If it WAS an error HTML, the error toast was already shown inside summarizeWithBackend.
+                // We still throw SKIP_TO_FINALLY to prevent any further success logic if needed,
+                // although in this structure, it mainly just prevents the success toast.
+                throw new Error('SKIP_TO_FINALLY');
+            }
+            // --- *** MODIFICATION END *** ---
             
         } catch (error) {
             if (error.message !== 'SKIP_TO_FINALLY') {
-                console.error('Erreur dans le processus handleSubmit:', error);
-                // Don't show generic toast if specific ones were likely shown already by sub-functions
-                if (!error.message.includes('transcription:') && !error.message.includes('résumé:') && !error.message.includes('infos vidéo:')) {
-                    showToast(languageSelect.value === 'fr' ? `Erreur: ${error.message}` : `Error: ${error.message}`, 'error');
+                console.error('Erreur inattendue dans handleSubmit:', error);
+                // Show a generic error only if a specific one wasn't likely shown
+                if (!error.message.includes(getText('errorTranscript', 'Erreur transcription')) &&
+                    !error.message.includes(getText('errorSummary', 'Erreur résumé')) &&
+                    !error.message.includes(getText('errorVideoInfo', 'Erreur infos vidéo'))) {
+                    showToast(`${getText('error', 'Erreur')}: ${error.message}`, 'error');
                 }
-                // Optionally reset more aggressively on critical errors, but resetUI was already called at start
-                // resetUI();
             }
         } finally {
-            // 5. End Loading State (always run)
+            // 5. End Loading State
             loadingState.classList.add('hidden');
             summarizeBtn.disabled = false;
             isLoading = false;
-            // updateProgressBar(0); // <<-- ERROR WAS HERE
-            progressBar.style.width = '0%'; // <<-- FIX: Reset progress bar style
+            progressBar.style.width = '0%'; // Reset progress bar style
         }
     }
     
@@ -541,46 +548,46 @@ document.addEventListener('DOMContentLoaded', function() {
      * Copies the plain text version of the summary to the clipboard.
      */
     function copySummary() {
-        if (!summaryContent || !currentSummary) {
-            showToast(languageSelect.value === 'fr' ? 'Aucun résumé à copier.' : 'No summary to copy.', 'error');
+        const noSummaryText = getText('noSummaryToCopy', 'Aucun résumé à copier.');
+        const summaryEmptyText = getText('summaryEmpty', 'Le résumé est vide.');
+        const copySuccessText = getText('summaryCopied', 'Résumé copié !');
+        const copyFailText = getText('copyFailed', 'Échec de la copie.');
+        const copyFallbackSuccessText = getText('summaryCopiedFallback', 'Résumé copié (méthode alternative) !');
+        
+        if (!summaryContent || !currentSummary || currentSummary.includes('<p class="text-red-600">')) { // Don't copy error messages
+            showToast(noSummaryText, 'error');
             return;
         }
         
-        // Get plain text from the summary HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = currentSummary;
-        // Replace <br> with newlines, handle paragraphs, lists etc. for better text structure
         tempDiv.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
         tempDiv.querySelectorAll('p, h1, h2, h3, h4, li, blockquote').forEach(el => {
-            // Add newline *before* list items and headers for better spacing
             if(el.tagName === 'LI' || el.tagName.startsWith('H') || el.tagName === 'BLOCKQUOTE') {
                 el.before('\n');
             }
-            el.append('\n'); // Add newline after block elements
+            el.append('\n');
         });
-        tempDiv.querySelectorAll('hr').forEach(hr => hr.replaceWith('\n---\n')); // Represent HR
+        tempDiv.querySelectorAll('hr').forEach(hr => hr.replaceWith('\n---\n'));
         
-        let textToCopy = tempDiv.textContent || tempDiv.innerText || ''; // Get text content
-        textToCopy = textToCopy.replace(/\n{3,}/g, '\n\n'); // Collapse multiple newlines
+        let textToCopy = tempDiv.textContent || tempDiv.innerText || '';
+        textToCopy = textToCopy.replace(/\n{3,}/g, '\n\n').trim(); // Collapse multiple newlines and trim
         
-        if (!textToCopy.trim()) {
-            showToast(languageSelect.value === 'fr' ? 'Le résumé est vide.' : 'Summary is empty.', 'error');
+        if (!textToCopy) {
+            showToast(summaryEmptyText, 'error');
             return;
         }
         
-        // Use Clipboard API for better security and user experience
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(textToCopy.trim()).then(() => {
-                showToast(languageSelect.value === 'fr' ? 'Résumé copié !' : 'Summary copied!', 'success');
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast(copySuccessText, 'success');
             }).catch(err => {
                 console.error('Erreur copie Clipboard API:', err);
-                showToast(languageSelect.value === 'fr' ? 'Échec de la copie.' : 'Copy failed.', 'error');
-                // Fallback to execCommand if needed (less reliable)
-                copyWithExecCommand(textToCopy.trim());
+                showToast(copyFailText, 'error');
+                copyWithExecCommand(textToCopy); // Attempt fallback
             });
         } else {
-            // Fallback for older browsers or non-HTTPS
-            copyWithExecCommand(textToCopy.trim());
+            copyWithExecCommand(textToCopy); // Use fallback directly
         }
     }
     
@@ -589,9 +596,12 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} text - The text to copy.
      */
     function copyWithExecCommand(text) {
+        const copySuccessText = getText('summaryCopiedFallback', 'Résumé copié (méthode alternative) !');
+        const copyFailText = getText('copyFailed', 'Échec de la copie.');
+        
         const textArea = document.createElement('textarea');
         textArea.value = text;
-        textArea.style.position = 'fixed'; // Prevent scrolling to bottom
+        textArea.style.position = 'fixed';
         textArea.style.top = '-9999px';
         textArea.style.left = '-9999px';
         document.body.appendChild(textArea);
@@ -600,13 +610,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const successful = document.execCommand('copy');
             if (successful) {
-                showToast(languageSelect.value === 'fr' ? 'Résumé copié (méthode alternative) !' : 'Summary copied (fallback method)!', 'success');
+                showToast(copySuccessText, 'success');
             } else {
                 throw new Error('document.execCommand failed');
             }
         } catch (err) {
             console.error('Erreur copie execCommand:', err);
-            showToast(languageSelect.value === 'fr' ? 'Échec de la copie.' : 'Copy failed.', 'error');
+            showToast(copyFailText, 'error');
         }
         document.body.removeChild(textArea);
     }
@@ -617,8 +627,14 @@ document.addEventListener('DOMContentLoaded', function() {
      * Dynamically loads jsPDF if not already available.
      */
     function downloadSummary() {
-        if (!currentSummary || !videoData) {
-            showToast(languageSelect.value === 'fr' ? 'Aucun résumé à télécharger.' : 'No summary to download.', 'error');
+        const noSummaryDownloadText = getText('noSummaryToDownload', 'Aucun résumé à télécharger.');
+        const preparingPDFText = getText('preparingPDF', 'Préparation du PDF...');
+        const pdfLibraryErrorText = getText('pdfLibraryError', 'Erreur chargement dépendance PDF.');
+        const pdfDownloadedText = getText('pdfDownloaded', 'PDF téléchargé !');
+        const pdfCreationErrorText = getText('pdfCreationError', 'Erreur lors de la création du PDF.');
+        
+        if (!currentSummary || !videoData || currentSummary.includes('<p class="text-red-600">')) { // Don't download errors
+            showToast(noSummaryDownloadText, 'error');
             return;
         }
         
@@ -626,10 +642,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         function loadScript(src) {
             return new Promise((resolve, reject) => {
-                // Check if already loaded
                 if (typeof window.jspdf !== 'undefined') {
-                    resolve();
-                    return;
+                    resolve(); return;
                 }
                 const script = document.createElement('script');
                 script.src = src;
@@ -639,226 +653,161 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        showToast(languageSelect.value === 'fr' ? 'Préparation du PDF...' : 'Preparing PDF...');
+        showToast(preparingPDFText, 'info');
         
         loadScript(jspdfSrc)
-            .then(() => {
-                generatePDF(); // Call the PDF generation function
-            })
+            .then(() => generatePDF())
             .catch(err => {
                 console.error("Erreur chargement librairie PDF:", err);
-                showToast(languageSelect.value === 'fr' ? 'Erreur chargement dépendance PDF.' : 'Error loading PDF library.', 'error');
+                showToast(pdfLibraryErrorText, 'error');
             });
-        
         
         function generatePDF() {
             try {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
                 const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
                 const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-                const margin = 15; // Page margin
+                const margin = 15;
                 const maxLineWidth = pageWidth - margin * 2;
-                let currentY = margin; // Start Y position
-                
-                // --- Add Custom Font (Optional - improves character support) ---
-                // Example using a Google Font URL (replace with actual font files if self-hosting)
-                // Note: jsPDF needs the font file itself, not just CSS. This requires more setup
-                // typically involving font files (ttf) and jsPDF's addFont() method.
-                // For simplicity, we'll stick to standard fonts. Consider using standard 'Helvetica', 'Times', 'Courier'.
-                // doc.setFont('Helvetica'); // Example: Set a standard font
-                
+                let currentY = margin;
+                const lang = languageSelect.value;
+                const unknownText = getText('unknown', 'Inconnue');
                 
                 // --- PDF Content ---
+                doc.setFont('Helvetica'); // Use a standard font
                 
-                // 1. Video Title (allow multiple lines)
+                // 1. Video Title
                 doc.setFontSize(16);
                 doc.setFont(undefined, 'bold');
-                const titleLines = doc.splitTextToSize(videoData.title || 'Résumé Vidéo', maxLineWidth);
+                const titleLines = doc.splitTextToSize(videoData.title || getText('videoSummary', 'Résumé Vidéo'), maxLineWidth);
+                if (currentY + titleLines.length * 7 > pageHeight - margin) { doc.addPage(); currentY = margin; }
                 doc.text(titleLines, margin, currentY);
-                currentY += (titleLines.length * 7) + 5; // Adjust spacing based on lines
+                currentY += (titleLines.length * 7) + 5;
                 
                 // 2. Metadata
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'normal');
-                doc.setTextColor(100); // Subtle grey for metadata
+                doc.setTextColor(100);
                 
                 const metadata = [
                     `URL: https://www.youtube.com/watch?v=${currentVideoId}`,
-                    `Chaîne: ${videoData.channelTitle || 'Inconnue'}`,
-                    `Publié: ${formatDate(videoData.publishedAt)}`,
-                    `Durée: ${videoData.duration || 'Inconnue'}`,
-                    `Résumé généré le: ${formatDate(new Date())} (Langue: ${languageSelect.value}, Longueur: currentSummaryLength)`
+                    `${getText('channel', 'Chaîne')}: ${videoData.channelTitle || unknownText}`,
+                    `${getText('published', 'Publié')}: ${formatDate(videoData.publishedAt)}`,
+                    `${getText('duration', 'Durée')}: ${videoData.duration || unknownText}`,
+                    `${getText('summaryGeneratedOn', 'Résumé généré le')}: ${formatDate(new Date())} (${getText('language', 'Langue')}: ${lang}, ${getText('length', 'Longueur')}: ${getText(`length${capitalize(currentSummaryLength)}`, currentSummaryLength)})`
                 ];
                 
                 metadata.forEach(line => {
-                    if (currentY > pageHeight - margin) { // Check for page break BEFORE adding text
-                        doc.addPage();
-                        currentY = margin;
-                    }
-                    // Handle potential long lines in metadata
                     const metaLines = doc.splitTextToSize(line, maxLineWidth);
+                    const neededHeight = metaLines.length * 4;
+                    if (currentY + neededHeight > pageHeight - margin) { doc.addPage(); currentY = margin; }
                     doc.text(metaLines, margin, currentY);
-                    currentY += (metaLines.length * 4); // Increment Y based on number of lines * font size factor
+                    currentY += neededHeight + 1; // Add small gap
                 });
                 
                 currentY += 5; // Extra space before summary
+                doc.setTextColor(0); // Reset text color
                 
-                // 3. Summary Content (Process HTML for basic formatting)
-                doc.setTextColor(0); // Reset to black text
-                
+                // 3. Summary Content
                 const summaryContainer = document.createElement('div');
                 summaryContainer.innerHTML = currentSummary; // Parse the HTML
                 
-                function addContentToPdf(element, currentIndent = 0) {
-                    // Recursive function to handle nested elements (basic list/blockquote nesting)
-                    
-                    // Check for page break BEFORE adding text
-                    const neededSpace = 10; // Estimate space needed for potential text line
-                    if (currentY > pageHeight - margin - neededSpace) { // Leave some bottom margin
-                        doc.addPage();
-                        currentY = margin;
-                        doc.setFontSize(11); // Reset font size after page break
-                        doc.setFont(undefined, 'normal');
-                        doc.setTextColor(0);
+                function addContentToPdf(element, currentIndent = 0, currentStyle = { size: 11, style: 'normal', color: [0, 0, 0], font: 'Helvetica' }) {
+                    const neededSpace = currentStyle.size * 0.5; // Estimate space needed
+                    if (currentY > pageHeight - margin - neededSpace) {
+                        doc.addPage(); currentY = margin;
+                        doc.setFont(currentStyle.font, currentStyle.style); // Reset font on new page
+                        doc.setFontSize(currentStyle.size);
+                        doc.setTextColor(...currentStyle.color);
                     }
                     
-                    let textContent = (element.textContent || element.innerText || '').trim();
-                    let isBold = false;
-                    let isItalic = false; // jsPDF standard fonts might not support both bold+italic well
-                    let fontSize = 11;
-                    let textStyle = 'normal'; // 'normal', 'bold', 'italic', 'bolditalic'
-                    let elementMargin = 0; // Space before element
+                    let elementStyle = { ...currentStyle }; // Inherit style
+                    let elementMargin = 0;
                     let listPrefix = '';
                     let currentX = margin + currentIndent;
-                    let elementColor = 0; // Default black
                     
-                    // Apply styles based on tag name
                     switch (element.tagName) {
-                        case 'H1': fontSize = 14; textStyle = 'bold'; elementMargin = 4; break;
-                        case 'H2': fontSize = 13; textStyle = 'bold'; elementMargin = 3; break;
-                        case 'H3': fontSize = 12; textStyle = 'bold'; elementMargin = 2; break;
-                        case 'STRONG': case 'B': textStyle = 'bold'; break; // Apply bold style
-                        case 'EM': case 'I': textStyle = 'italic'; break; // Apply italic style
-                        case 'P': elementMargin = 2; break; // Add space before paragraphs
-                        case 'LI':
-                            listPrefix = '• '; // Use bullet for lists
-                            elementMargin = 1; // Smaller space for list items
-                            break;
-                        case 'BLOCKQUOTE':
-                            currentIndent += 5; // Indent blockquotes
-                            currentX = margin + currentIndent;
-                            elementColor = 100; // Grey text for quote
-                            elementMargin = 2;
-                            break;
+                        case 'H1': elementStyle.size = 14; elementStyle.style = 'bold'; elementMargin = 4; break;
+                        case 'H2': elementStyle.size = 13; elementStyle.style = 'bold'; elementMargin = 3; break;
+                        case 'H3': elementStyle.size = 12; elementStyle.style = 'bold'; elementMargin = 2; break;
+                        case 'STRONG': case 'B': elementStyle.style = 'bold'; break;
+                        case 'EM': case 'I': elementStyle.style = 'italic'; break;
+                        case 'P': elementMargin = 2; break;
+                        case 'LI': listPrefix = '• '; elementMargin = 1; break;
+                        case 'BLOCKQUOTE': currentIndent += 5; currentX = margin + currentIndent; elementStyle.color = [100, 100, 100]; elementMargin = 2; break;
                         case 'HR':
-                            if (currentY + 4 > pageHeight - margin) { doc.addPage(); currentY = margin; } // Page break for HR
-                            doc.setDrawColor(150);
-                            doc.line(margin, currentY + 2, pageWidth - margin, currentY + 2);
-                            currentY += 4;
-                            return; // Don't process text for HR
-                        case 'A':
-                            // Links: Add URL in parentheses or handle differently if needed
-                            textContent = `${textContent} (${element.href})`;
-                            elementColor = [0, 0, 255]; // Blue for links
-                            break;
-                        case 'CODE':
-                            // Basic code styling: Monospace font, maybe background?
-                            doc.setFont('Courier', 'normal'); // Use a monospace font
-                            fontSize = 10;
-                            // Background for inline code is hard without complex coordinates
-                            break;
-                        case 'PRE':
-                            // Preformatted text / Code blocks
-                            if (currentY + 10 > pageHeight - margin) { doc.addPage(); currentY = margin; } // Ensure space
-                            doc.setFont('Courier', 'normal');
-                            fontSize = 9;
-                            doc.setFillColor(240, 240, 240); // Light grey background
-                            // Calculate background dimensions (approximate)
-                            const preLines = doc.splitTextToSize(textContent, maxLineWidth - currentIndent);
-                            const preHeight = preLines.length * (fontSize * 0.35) + 2;
-                            doc.rect(currentX, currentY, maxLineWidth - currentIndent, preHeight, 'F');
-                            doc.setTextColor(0);
-                            doc.text(preLines, currentX + 1, currentY + fontSize * 0.35); // Add slight padding
+                            if (currentY + 4 > pageHeight - margin) { doc.addPage(); currentY = margin; }
+                            doc.setDrawColor(150); doc.line(margin, currentY + 2, pageWidth - margin, currentY + 2); currentY += 4; return;
+                        case 'A': elementStyle.color = [0, 0, 255]; break; // Basic link styling
+                        case 'CODE': elementStyle.font = 'Courier'; elementStyle.size = 10; break; // Inline code
+                        case 'PRE': // Code Block
+                            if (currentY + 10 > pageHeight - margin) { doc.addPage(); currentY = margin; }
+                            elementStyle.font = 'Courier'; elementStyle.size = 9;
+                            const preText = element.textContent || '';
+                            const preLines = doc.splitTextToSize(preText, maxLineWidth - currentIndent - 2); // Allow padding
+                            const preHeight = preLines.length * (elementStyle.size * 0.35) + 4; // Estimate height + padding
+                            if (currentY + preHeight > pageHeight - margin) { doc.addPage(); currentY = margin; }
+                            doc.setFillColor(240, 240, 240);
+                            doc.rect(currentX, currentY, maxLineWidth - currentIndent, preHeight, 'F'); // Background
+                            doc.setFont(elementStyle.font, 'normal'); doc.setFontSize(elementStyle.size); doc.setTextColor(0);
+                            doc.text(preLines, currentX + 1, currentY + elementStyle.size * 0.35); // Add text
                             currentY += preHeight + 3;
-                            doc.setFont('Helvetica', 'normal'); // Reset font
-                            return; // Handled preformatted text
-                        // Add cases for UL, OL if specific styling is needed beyond LI handling
+                            return; // Handled pre block
                     }
                     
-                    currentY += elementMargin; // Add space before element
+                    currentY += elementMargin;
+                    doc.setFont(elementStyle.font, elementStyle.style);
+                    doc.setFontSize(elementStyle.size);
+                    doc.setTextColor(...elementStyle.color);
                     
-                    // Handle elements with potential nested styling (strong/em within p/li)
-                    // This is complex with jsPDF's text(). A simpler approach is to process node children.
-                    
-                    // If element has children, process them recursively
-                    if (element.childNodes && element.childNodes.length > 0 && element.tagName !== 'PRE') {
+                    // Process child nodes recursively or text content directly
+                    if (element.childNodes && element.childNodes.length > 0 && element.tagName !== 'PRE' && element.tagName !== 'CODE') {
                         element.childNodes.forEach(child => {
                             if (child.nodeType === Node.ELEMENT_NODE) {
-                                // Recursive call for element nodes
-                                addContentToPdf(child, currentIndent + (element.tagName === 'BLOCKQUOTE' ? 5 : 0)); // Pass indent
+                                addContentToPdf(child, currentIndent, elementStyle); // Pass current style and indent
                             } else if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
-                                // Process text nodes directly if they contain text
-                                const nodeText = child.textContent.trim();
-                                if (!nodeText) return;
-                                
-                                if (currentY > pageHeight - margin - 5) { doc.addPage(); currentY = margin; } // Check page break for text
-                                
-                                doc.setFontSize(fontSize);
-                                doc.setFont(undefined, textStyle); // Apply parent style for now
-                                doc.setTextColor(elementColor);
-                                
-                                // Apply list prefix if inside LI (check parent or context)
-                                let effectivePrefix = '';
-                                if (element.tagName === 'LI' || element.closest('li')) {
-                                    effectivePrefix = listPrefix;
-                                }
-                                
-                                const lines = doc.splitTextToSize(effectivePrefix + nodeText, maxLineWidth - currentIndent - (effectivePrefix ? 3 : 0));
-                                doc.text(lines, currentX + (effectivePrefix ? 3 : 0), currentY);
-                                currentY += lines.length * (fontSize * 0.35) + 1; // Adjust spacing based on lines
-                                
-                                // Reset potential temporary styles like color/font
-                                doc.setTextColor(0);
-                                doc.setFont('Helvetica', 'normal');
+                                processTextNode(child.textContent, currentX, listPrefix, maxLineWidth - currentIndent, elementStyle);
                             }
                         });
-                    } else if (textContent && element.tagName !== 'PRE') {
-                        // Handle simple elements with only text content
-                        if (currentY > pageHeight - margin - 5) { doc.addPage(); currentY = margin; } // Check page break
-                        
-                        doc.setFontSize(fontSize);
-                        doc.setFont(undefined, textStyle);
-                        doc.setTextColor(elementColor);
-                        
-                        const lines = doc.splitTextToSize(listPrefix + textContent, maxLineWidth - currentIndent - (listPrefix ? 3 : 0));
-                        doc.text(lines, currentX + (listPrefix ? 3 : 0), currentY);
-                        currentY += lines.length * (fontSize * 0.35) + 1; // Adjust spacing based on lines
-                        
-                        // Reset potential temporary styles like color/font
-                        doc.setTextColor(0);
-                        doc.setFont('Helvetica', 'normal');
+                    } else if (element.textContent && element.tagName !== 'PRE') {
+                        // Handle simple elements or leaf nodes with text
+                        processTextNode(element.textContent, currentX, listPrefix, maxLineWidth - currentIndent, elementStyle, element.tagName === 'A' ? element.href : null);
                     }
-                    
-                    // Reset indent if it was specific to this element (e.g., blockquote)
-                    // currentIndent management needs refinement for deeper nesting
                 }
                 
-                // Iterate through direct children of the summary container
+                function processTextNode(text, x, prefix, availableWidth, style, linkUrl = null) {
+                    const fullText = prefix + text.trim() + (linkUrl ? ` (${linkUrl})` : '');
+                    if (!fullText) return;
+                    
+                    const lines = doc.splitTextToSize(fullText, availableWidth - (prefix ? 3 : 0));
+                    const neededHeight = lines.length * (style.size * 0.35) + 1;
+                    
+                    if (currentY + neededHeight > pageHeight - margin) {
+                        doc.addPage(); currentY = margin;
+                        // Reset font/style/color on new page
+                        doc.setFont(style.font, style.style);
+                        doc.setFontSize(style.size);
+                        doc.setTextColor(...style.color);
+                    }
+                    // Set styles again before text (might have changed due to page break/other elements)
+                    doc.setFont(style.font, style.style);
+                    doc.setFontSize(style.size);
+                    doc.setTextColor(...style.color);
+                    
+                    doc.text(lines, x + (prefix ? 3 : 0), currentY);
+                    currentY += neededHeight;
+                }
+                
+                // Start processing the summary container's children
                 summaryContainer.childNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) { // Process only element nodes
-                        addContentToPdf(node, 0); // Start with 0 indent
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        addContentToPdf(node, 0); // Start with 0 indent and default style
                     } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-                        // Handle top-level text nodes if any (wrap in a pseudo-element for processing)
+                        // Handle top-level text nodes (wrap in pseudo-P element)
                         addContentToPdf({ tagName: 'P', textContent: node.textContent }, 0);
                     }
                 });
-                
                 
                 // 4. Footer (Page Numbers)
                 const pageCount = doc.internal.getNumberOfPages();
@@ -866,17 +815,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     doc.setPage(i);
                     doc.setFontSize(9);
                     doc.setTextColor(150);
-                    doc.text(`Page ${i} / ${pageCount} - YouSummarize`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
+                    doc.text(`${getText('page', 'Page')} ${i} / ${pageCount} - YouSummarize`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
                 }
                 
                 // 5. Save
                 const safeTitle = (videoData.title || 'youtube-summary').replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 40);
                 doc.save(`YouSummarize_${safeTitle}.pdf`);
-                showToast(languageSelect.value === 'fr' ? 'PDF téléchargé !' : 'PDF Downloaded!', 'success');
+                showToast(pdfDownloadedText, 'success');
                 
             } catch (pdfError) {
                 console.error("Erreur génération PDF:", pdfError);
-                showToast(languageSelect.value === 'fr' ? 'Erreur lors de la création du PDF.' : 'Error creating PDF.', 'error');
+                showToast(pdfCreationErrorText, 'error');
             }
         }
     }
@@ -886,22 +835,21 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {Event} e - The click event.
      */
     async function handleLengthChange(e) {
+        if (!e || !e.target || !e.target.dataset || !e.target.dataset.length) return; // Guard against invalid events
+        
+        const newLength = e.target.dataset.length;
+        
         if (isLoading || !currentTranscription || !videoData) {
-            // Don't regenerate if not ready or already loading
-            // Visually re-select the currently active button if click is ignored
+            // Prevent action if busy or no data, visually reset to current active state if needed
             summaryLengthButtons.forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.length === currentSummaryLength);
-                btn.classList.toggle('bg-[#E9E5D8]', btn.dataset.length === currentSummaryLength);
-                btn.classList.toggle('text-main', btn.dataset.length === currentSummaryLength);
-                btn.classList.toggle('font-medium', btn.dataset.length === currentSummaryLength);
-                btn.classList.toggle('bg-white', btn.dataset.length !== currentSummaryLength);
-                btn.classList.toggle('text-subtle', btn.dataset.length !== currentSummaryLength);
+                const isActive = btn.dataset.length === currentSummaryLength;
+                btn.classList.toggle('active', isActive);
+                // ... toggle other classes as in resetUI/applyTranslations ...
             });
             return;
         }
         
-        const newLength = e.target.dataset.length;
-        if (!newLength || newLength === currentSummaryLength) return; // No change or invalid target
+        if (newLength === currentSummaryLength) return; // No change
         
         // Update button styles immediately
         summaryLengthButtons.forEach(btn => {
@@ -916,28 +864,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         currentSummaryLength = newLength; // Update state
         
-        // Regenerate summary with new length preference
-        isLoading = true; // Set loading flag
-        results.classList.add('opacity-50', 'pointer-events-none'); // Dim results while loading
-        summaryContent.innerHTML = `<p class="flex items-center justify-center gap-2"><span class="loading-spinner !w-5 !h-5 !border-2"></span> ${languageSelect.value === 'fr' ? 'Recalcul du résumé...' : 'Recalculating summary...'}</p>`;
+        // Regenerate summary
+        isLoading = true;
+        results.classList.add('opacity-50', 'pointer-events-none');
+        summaryContent.innerHTML = `<p class="flex items-center justify-center gap-2"><span class="loading-spinner !w-5 !h-5 !border-2"></span> ${getText('recalculatingSummary', 'Recalcul du résumé...')}</p>`;
         
         try {
-            // Pass the *original* transcription, not the potentially truncated one used initially
+            // summarizeWithBackend returns summary HTML or error HTML
             const summaryHtml = await summarizeWithBackend(currentTranscription, videoData, currentSummaryLength);
-            if (!summaryHtml || summaryHtml.includes('Impossible de générer le résumé')) {
-                // Error handled inside, display the error message returned
-                displaySummary(summaryHtml || `<p class="text-red-600">${languageSelect.value === 'fr' ? 'Erreur lors du recalcul.' : 'Error recalculating.'}</p>`);
-            } else {
-                displaySummary(summaryHtml); // Display the new summary
-                showToast(`${languageSelect.value === 'fr' ? 'Résumé mis à jour' : 'Summary updated'} (${languageSelect.value === 'fr' ? (translations.fr[`length${capitalize(currentSummaryLength)}`] || currentSummaryLength) : (translations.en[`length${capitalize(currentSummaryLength)}`] || currentSummaryLength)})`, 'success'); // Show translated length name
-            }
+            displaySummary(summaryHtml); // Display the result (summary or error)
             
+            // Show success toast only if it wasn't an error message
+            if (!summaryHtml || !summaryHtml.includes('<p class="text-red-600">')) {
+                const lengthText = getText(`length${capitalize(currentSummaryLength)}`, currentSummaryLength); // Get translated length name
+                showToast(`${getText('summaryUpdated', 'Résumé mis à jour')} (${lengthText})`, 'success');
+            }
         } catch (error) {
-            // Should be caught inside summarizeWithBackend, but just in case
+            // Catch unexpected errors during the process (though summarizeWithBackend should handle most)
             console.error("Erreur recalcul résumé:", error);
-            showToast(languageSelect.value === 'fr' ? 'Erreur recalcul.' : 'Error recalculating.', 'error');
-            // Optionally restore previous summary? For now, the error message stays.
-            // displaySummary(currentSummary);
+            showToast(getText('errorRecalculating', 'Erreur recalcul.'), 'error');
+            // Display a generic error in the summary area if needed
+            displaySummary(`<p class="text-red-600">${getText('errorRecalculating', 'Erreur recalcul.')}</p>`);
         } finally {
             isLoading = false;
             results.classList.remove('opacity-50', 'pointer-events-none');
@@ -962,48 +909,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(text => {
                     if (text) {
                         youtubeUrl.value = text;
-                        youtubeUrl.focus(); // Focus the input after pasting
-                        // Optionally trigger validation or clear previous results slightly later
-                        showToast(languageSelect.value === 'fr' ? 'Lien collé !' : 'Link pasted!', 'success');
-                        // Maybe auto-submit if the user prefers?
-                        // handleSubmit(new Event('submit', { cancelable: true, bubbles: true }));
+                        youtubeUrl.focus();
+                        showToast(getText('linkPasted', 'Lien collé !'), 'success');
                     } else {
-                        showToast(languageSelect.value === 'fr' ? 'Presse-papiers vide.' : 'Clipboard is empty.', 'info');
+                        showToast(getText('clipboardEmpty', 'Presse-papiers vide.'), 'info');
                     }
                 })
                 .catch(err => {
                     console.error('Erreur lecture presse-papiers : ', err);
-                    // Provide more context about permissions if possible
                     if (err.name === 'NotAllowedError') {
-                        showToast(languageSelect.value === 'fr' ? 'Autorisation requise pour coller.' : 'Permission needed to paste.', 'error');
+                        showToast(getText('pastePermissionError', 'Autorisation requise pour coller.'), 'error');
                     } else {
-                        showToast(languageSelect.value === 'fr' ? 'Impossible de coller.' : 'Could not paste.', 'error');
+                        showToast(getText('pasteError', 'Impossible de coller.'), 'error');
                     }
                 });
         });
     } else if (pasteButton) {
-        // Hide or disable the button if Clipboard API is not available (e.g., non-HTTPS)
         console.warn("API Clipboard non disponible (HTTPS requis?). Bouton Coller désactivé.");
         pasteButton.disabled = true;
         pasteButton.style.opacity = '0.5';
-        pasteButton.title = languageSelect.value === 'fr' ? "Fonctionnalité non disponible (HTTPS requis)" : "Feature unavailable (HTTPS required)";
+        // Title will be updated by translation function
     }
     
     // Listeners for Example Links
     exampleLinks.forEach(button => {
         button.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent potential default behavior if it's an <a> tag
+            e.preventDefault();
             const url = e.currentTarget.dataset.url;
-            if (url && !isLoading) { // Only process if not already loading
+            if (url && !isLoading) {
                 youtubeUrl.value = url;
-                // Automatically submit the form when an example is clicked
-                // Create a synthetic event that bubbles and is cancelable
                 const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
                 youtubeForm.dispatchEvent(submitEvent);
-                // Scroll to top smoothly to see loading indicator/results area
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else if (isLoading) {
-                showToast(languageSelect.value === 'fr' ? 'Veuillez attendre la fin du résumé actuel.' : 'Please wait for the current summary to finish.', 'info');
+                showToast(getText('waitForCurrentSummary', 'Veuillez attendre la fin du résumé actuel.'), 'info');
             }
         });
     });
@@ -1013,7 +952,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', handleLengthChange);
     });
     
-    // Store translations globally after definition
+    // --- Translations ---
     const translations = {
         fr: {
             title: "YouSummarize - Résumés Vidéo YouTube par IA",
@@ -1028,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
             exampleTitle: "Ou essayez avec un exemple :",
             loadingDefault: "Analyse en cours...",
             loadingFewSecs: "Cela peut prendre quelques secondes.",
-            videoInfoTitle: "Résumé Généré", // Title above the summary itself
+            videoInfoTitle: "Résumé Généré",
             copyBtn: "Copier",
             downloadBtn: "PDF",
             lengthLabel: "Précision:",
@@ -1036,29 +975,35 @@ document.addEventListener('DOMContentLoaded', function() {
             lengthMedium: "Moyen",
             lengthLong: "Détaillé",
             howWhyTitle: "Simple, Rapide, Efficace",
-            feature1Title: "Collez & Gagnez du Temps",
-            feature1Desc: "Entrez l'URL YouTube. Obtenez l'essentiel en quelques secondes, pas en heures.",
-            feature2Title: "Analyse IA & Idées Clés",
-            feature2Desc: "L'IA extrait les points importants. Comprenez les concepts clés facilement.",
-            feature3Title: "Résumé & Partage Facile",
-            feature3Desc: "Recevez un texte structuré. Copiez ou téléchargez pour partager vos trouvailles.",
+            feature1Title: "Collez & Gagnez du Temps", feature1Desc: "Entrez l'URL YouTube. Obtenez l'essentiel en quelques secondes, pas en heures.",
+            feature2Title: "Analyse IA & Idées Clés", feature2Desc: "L'IA extrait les points importants. Comprenez les concepts clés facilement.",
+            feature3Title: "Résumé & Partage Facile", feature3Desc: "Recevez un texte structuré. Copiez ou téléchargez pour partager vos trouvailles.",
             faqTitle: "Questions Fréquentes",
-            ctaTitle: "Prêt à accélérer votre veille ?",
-            ctaP: "Arrêtez de perdre du temps. Collez votre premier lien YouTube maintenant.",
-            ctaBtn: "Essayer YouSummarize (Gratuit)",
-            ctaHelp: "Aucune inscription requise",
-            newsletterTitle: "Restez informé",
-            newsletterP: "Nouveautés et astuces occasionnelles.",
-            newsletterEmail: "votre.email@exemple.com",
-            newsletterBtn: "S'abonner",
-            footerBy: "par",
-            footerApi: "Documentation API",
-            footerPrivacy: "Confidentialité",
-            footerTerms: "Conditions",
-            footerContact: "Contact",
-            footerSitemap: "Plan du site",
-            bmcMessage: "Merci pour votre soutien ! Gardons ce service gratuit !"
-            
+            ctaTitle: "Prêt à accélérer votre veille ?", ctaP: "Arrêtez de perdre du temps. Collez votre premier lien YouTube maintenant.", ctaBtn: "Essayer YouSummarize (Gratuit)", ctaHelp: "Aucune inscription requise",
+            newsletterTitle: "Restez informé", newsletterP: "Nouveautés et astuces occasionnelles.", newsletterEmail: "votre.email@exemple.com", newsletterBtn: "S'abonner",
+            footerBy: "par", footerApi: "Documentation API", footerPrivacy: "Confidentialité", footerTerms: "Conditions", footerContact: "Contact", footerSitemap: "Plan du site",
+            bmcMessage: "Merci pour votre soutien ! Gardons ce service gratuit !",
+            // Error/Status Messages
+            fetchingVideoInfo: 'Récupération des infos vidéo...', httpError: 'Erreur HTTP:', videoNotFound: 'Vidéo non trouvée ou informations manquantes.',
+            errorVideoInfo: 'Erreur infos vidéo', videoInfoUnavailable: 'Vidéo YouTube (Infos Indisponibles)', unknownChannel: 'Chaîne inconnue', unknown: 'Inconnue',
+            fetchingTranscript: 'Récupération de la transcription ({lang})...', transcriptNotFoundLang: "Transcription non trouvée pour la langue '{lang}'. Essayez une autre langue si disponible.",
+            subtitlesDisabled: 'Les sous-titres sont désactivés pour cette vidéo.', serverError: 'Erreur serveur', invalidTranscriptFormat: 'Format de réponse de transcription invalide.',
+            transcriptRetrieved: 'Transcription récupérée...', errorTranscript: 'Erreur transcription', transcriptFailed: 'Échec transcription',
+            generatingAISummary: 'Génération du résumé IA...', summaryReceived: 'Résumé reçu !', errorSummary: 'Erreur résumé', summaryFailed: 'Échec résumé',
+            couldNotGenerateSummary: 'Impossible de générer le résumé.', summaryGenerationFailed: 'Le serveur a répondu mais n\'a pas pu générer de résumé pour cette vidéo.',
+            error: 'Erreur', unknownTitle: 'Titre inconnu',
+            enterUrl: 'Veuillez entrer une URL YouTube.', invalidUrl: 'URL YouTube invalide ou non reconnue.', validatingUrl: 'Validation de l\'URL...',
+            summaryGeneratedSuccess: 'Résumé généré avec succès !', limitedVideoInfo: 'Infos vidéo limitées récupérées.',
+            noSummaryToCopy: 'Aucun résumé à copier.', summaryEmpty: 'Le résumé est vide.', summaryCopied: 'Résumé copié !', copyFailed: 'Échec de la copie.', summaryCopiedFallback: 'Résumé copié (méthode alternative) !',
+            noSummaryToDownload: 'Aucun résumé à télécharger.', preparingPDF: 'Préparation du PDF...', pdfLibraryError: 'Erreur chargement dépendance PDF.', pdfDownloaded: 'PDF téléchargé !', pdfCreationErrorText: 'Erreur lors de la création du PDF.',
+            recalculatingSummary: 'Recalcul du résumé...', summaryUpdated: 'Résumé mis à jour', errorRecalculating: 'Erreur recalcul.',
+            linkPasted: 'Lien collé !', clipboardEmpty: 'Presse-papiers vide.', pastePermissionError: 'Autorisation requise pour coller.', pasteError: 'Impossible de coller.',
+            waitForCurrentSummary: 'Veuillez attendre la fin du résumé actuel.',
+            thumbnailAltPrefix: 'Miniature de la vidéo:', youtubeVideo: 'Vidéo YouTube', titleUnavailable: 'Titre indisponible',
+            unknownDate: 'Date inconnue', invalidDate: 'Date invalide', noSummaryGenerated: 'Aucun résumé généré.',
+            channel: 'Chaîne', published: 'Publié', duration: 'Durée', summaryGeneratedOn: 'Résumé généré le', language: 'Langue', length: 'Longueur',
+            page: 'Page', videoSummary: 'Résumé Vidéo',
+            pasteButtonDisabledTitle: "Fonctionnalité non disponible (HTTPS requis)",
         },
         en: {
             title: "YouSummarize - AI YouTube Video Summaries",
@@ -1081,28 +1026,35 @@ document.addEventListener('DOMContentLoaded', function() {
             lengthMedium: "Medium",
             lengthLong: "Detailed",
             howWhyTitle: "Simple, Fast, Effective",
-            feature1Title: "Paste & Save Time",
-            feature1Desc: "Enter the YouTube URL. Get the gist in seconds, not hours.",
-            feature2Title: "AI Analysis & Key Insights",
-            feature2Desc: "AI extracts the important points. Understand key concepts easily.",
-            feature3Title: "Summary & Easy Sharing",
-            feature3Desc: "Receive structured text. Copy or download to share your findings.",
+            feature1Title: "Paste & Save Time", feature1Desc: "Enter the YouTube URL. Get the gist in seconds, not hours.",
+            feature2Title: "AI Analysis & Key Insights", feature2Desc: "AI extracts the important points. Understand key concepts easily.",
+            feature3Title: "Summary & Easy Sharing", feature3Desc: "Receive structured text. Copy or download to share your findings.",
             faqTitle: "Frequently Asked Questions",
-            ctaTitle: "Ready to speed up your learning?",
-            ctaP: "Stop wasting time. Paste your first YouTube link now.",
-            ctaBtn: "Try YouSummarize (Free)",
-            ctaHelp: "No sign-up required",
-            newsletterTitle: "Stay Informed",
-            newsletterP: "Occasional updates and tips.",
-            newsletterEmail: "your.email@example.com",
-            newsletterBtn: "Subscribe",
-            footerBy: "by",
-            footerApi: "API Docs",
-            footerPrivacy: "Privacy",
-            footerTerms: "Terms",
-            footerContact: "Contact",
-            footerSitemap: "Sitemap",
-            bmcMessage: "Thanks for your support! Let's keep this service free!"
+            ctaTitle: "Ready to speed up your learning?", ctaP: "Stop wasting time. Paste your first YouTube link now.", ctaBtn: "Try YouSummarize (Free)", ctaHelp: "No sign-up required",
+            newsletterTitle: "Stay Informed", newsletterP: "Occasional updates and tips.", newsletterEmail: "your.email@example.com", newsletterBtn: "Subscribe",
+            footerBy: "by", footerApi: "API Docs", footerPrivacy: "Privacy", footerTerms: "Terms", footerContact: "Contact", footerSitemap: "Sitemap",
+            bmcMessage: "Thanks for your support! Let's keep this service free!",
+            // Error/Status Messages
+            fetchingVideoInfo: 'Fetching video info...', httpError: 'HTTP Error:', videoNotFound: 'Video not found or missing information.',
+            errorVideoInfo: 'Video Info Error', videoInfoUnavailable: 'YouTube Video (Info Unavailable)', unknownChannel: 'Unknown Channel', unknown: 'Unknown',
+            fetchingTranscript: 'Fetching transcript ({lang})...', transcriptNotFoundLang: "Transcript not found for language '{lang}'. Try another language if available.",
+            subtitlesDisabled: 'Subtitles are disabled for this video.', serverError: 'Server Error', invalidTranscriptFormat: 'Invalid transcript response format.',
+            transcriptRetrieved: 'Transcript retrieved...', errorTranscript: 'Transcript Error', transcriptFailed: 'Transcript Failed',
+            generatingAISummary: 'Generating AI summary...', summaryReceived: 'Summary received!', errorSummary: 'Summary Error', summaryFailed: 'Summary Failed',
+            couldNotGenerateSummary: 'Could not generate summary.', summaryGenerationFailed: 'The server responded but could not generate a summary for this video.',
+            error: 'Error', unknownTitle: 'Unknown Title',
+            enterUrl: 'Please enter a YouTube URL.', invalidUrl: 'Invalid or unrecognized YouTube URL.', validatingUrl: 'Validating URL...',
+            summaryGeneratedSuccess: 'Summary generated successfully!', limitedVideoInfo: 'Limited video info retrieved.',
+            noSummaryToCopy: 'No summary to copy.', summaryEmpty: 'Summary is empty.', summaryCopied: 'Summary copied!', copyFailed: 'Copy failed.', summaryCopiedFallback: 'Summary copied (fallback method)!',
+            noSummaryToDownload: 'No summary to download.', preparingPDF: 'Preparing PDF...', pdfLibraryError: 'Error loading PDF library.', pdfDownloaded: 'PDF Downloaded!', pdfCreationErrorText: 'Error creating PDF.',
+            recalculatingSummary: 'Recalculating summary...', summaryUpdated: 'Summary updated', errorRecalculating: 'Error recalculating.',
+            linkPasted: 'Link pasted!', clipboardEmpty: 'Clipboard is empty.', pastePermissionError: 'Permission needed to paste.', pasteError: 'Could not paste.',
+            waitForCurrentSummary: 'Please wait for the current summary to finish.',
+            thumbnailAltPrefix: 'Video thumbnail:', youtubeVideo: 'YouTube Video', titleUnavailable: 'Title unavailable',
+            unknownDate: 'Unknown date', invalidDate: 'Invalid date', noSummaryGenerated: 'No summary generated.',
+            channel: 'Channel', published: 'Published', duration: 'Duration', summaryGeneratedOn: 'Summary generated on', language: 'Language', length: 'Length',
+            page: 'Page', videoSummary: 'Video Summary',
+            pasteButtonDisabledTitle: "Feature unavailable (HTTPS required)",
         },
         es: { // Example Spanish - Needs full translation
             title: "YouSummarize - Resúmenes IA de Vídeos de YouTube",
@@ -1125,30 +1077,43 @@ document.addEventListener('DOMContentLoaded', function() {
             lengthMedium: "Medio",
             lengthLong: "Detallado",
             howWhyTitle: "Simple, Rápido, Eficaz",
-            feature1Title: "Pega y Ahorra Tiempo",
-            feature1Desc: "Introduce la URL de YouTube. Obtén lo esencial en segundos, no en horas.",
-            feature2Title: "Análisis IA e Ideas Clave",
-            feature2Desc: "La IA extrae los puntos importantes. Entiende los conceptos clave fácilmente.",
-            feature3Title: "Resumen y Fácil Compartir",
-            feature3Desc: "Recibe texto estructurado. Copia o descarga para compartir tus hallazgos.",
+            feature1Title: "Pega y Ahorra Tiempo", feature1Desc: "Introduce la URL de YouTube. Obtén lo esencial en segundos, no en horas.",
+            feature2Title: "Análisis IA e Ideas Clave", feature2Desc: "La IA extrae los puntos importantes. Entiende los conceptos clave fácilmente.",
+            feature3Title: "Resumen y Fácil Compartir", feature3Desc: "Recibe texto estructurado. Copia o descarga para compartir tus hallazgos.",
             faqTitle: "Preguntas Frecuentes",
-            ctaTitle: "¿Listo para acelerar tu aprendizaje?",
-            ctaP: "Deja de perder tiempo. Pega tu primer enlace de YouTube ahora.",
-            ctaBtn: "Probar YouSummarize (Gratis)",
-            ctaHelp: "No requiere registro",
-            newsletterTitle: "Mantente Informado",
-            newsletterP: "Novedades y consejos ocasionales.",
-            newsletterEmail: "tu.email@ejemplo.com",
-            newsletterBtn: "Suscribirse",
-            footerBy: "por",
-            footerApi: "Documentación API",
-            footerPrivacy: "Privacidad",
-            footerTerms: "Términos",
-            footerContact: "Contacto",
-            footerSitemap: "Mapa del sitio",
-            bmcMessage: "¡Gracias por tu apoyo! ¡Mantengamos este servicio gratuito!"
+            ctaTitle: "¿Listo para acelerar tu aprendizaje?", ctaP: "Deja de perder tiempo. Pega tu primer enlace de YouTube ahora.", ctaBtn: "Probar YouSummarize (Gratis)", ctaHelp: "No requiere registro",
+            newsletterTitle: "Mantente Informado", newsletterP: "Novedades y consejos ocasionales.", newsletterEmail: "tu.email@ejemplo.com", newsletterBtn: "Suscribirse",
+            footerBy: "por", footerApi: "Documentación API", footerPrivacy: "Privacidad", footerTerms: "Términos", footerContact: "Contacto", footerSitemap: "Mapa del sitio",
+            bmcMessage: "¡Gracias por tu apoyo! ¡Mantengamos este servicio gratuito!",
+            // Error/Status Messages (Translate these)
+            fetchingVideoInfo: 'Obteniendo información del vídeo...', httpError: 'Error HTTP:', videoNotFound: 'Vídeo no encontrado o falta información.',
+            errorVideoInfo: 'Error de información del vídeo', videoInfoUnavailable: 'Vídeo de YouTube (Información no disponible)', unknownChannel: 'Canal desconocido', unknown: 'Desconocido',
+            fetchingTranscript: 'Obteniendo transcripción ({lang})...', transcriptNotFoundLang: "Transcripción no encontrada para el idioma '{lang}'. Pruebe otro idioma si está disponible.",
+            subtitlesDisabled: 'Los subtítulos están desactivados para este vídeo.', serverError: 'Error del servidor', invalidTranscriptFormat: 'Formato de respuesta de transcripción inválido.',
+            transcriptRetrieved: 'Transcripción recuperada...', errorTranscript: 'Error de transcripción', transcriptFailed: 'Fallo en la transcripción',
+            generatingAISummary: 'Generando resumen IA...', summaryReceived: '¡Resumen recibido!', errorSummary: 'Error de resumen', summaryFailed: 'Fallo en el resumen',
+            couldNotGenerateSummary: 'No se pudo generar el resumen.', summaryGenerationFailed: 'El servidor respondió pero no pudo generar un resumen para este vídeo.',
+            error: 'Error', unknownTitle: 'Título desconocido',
+            enterUrl: 'Por favor, introduce una URL de YouTube.', invalidUrl: 'URL de YouTube inválida o no reconocida.', validatingUrl: 'Validando URL...',
+            summaryGeneratedSuccess: '¡Resumen generado con éxito!', limitedVideoInfo: 'Información de vídeo limitada recuperada.',
+            noSummaryToCopy: 'No hay resumen para copiar.', summaryEmpty: 'El resumen está vacío.', summaryCopied: '¡Resumen copiado!', copyFailed: 'Falló la copia.', summaryCopiedFallback: '¡Resumen copiado (método alternativo)!',
+            noSummaryToDownload: 'No hay resumen para descargar.', preparingPDF: 'Preparando PDF...', pdfLibraryError: 'Error al cargar la biblioteca PDF.', pdfDownloaded: '¡PDF descargado!', pdfCreationErrorText: 'Error al crear el PDF.',
+            recalculatingSummary: 'Recalculando resumen...', summaryUpdated: 'Resumen actualizado', errorRecalculating: 'Error al recalcular.',
+            linkPasted: '¡Enlace pegado!', clipboardEmpty: 'Portapapeles vacío.', pastePermissionError: 'Se necesita permiso para pegar.', pasteError: 'No se pudo pegar.',
+            waitForCurrentSummary: 'Por favor, espere a que termine el resumen actual.',
+            thumbnailAltPrefix: 'Miniatura del vídeo:', youtubeVideo: 'Vídeo de YouTube', titleUnavailable: 'Título no disponible',
+            unknownDate: 'Fecha desconocida', invalidDate: 'Fecha inválida', noSummaryGenerated: 'No se generó ningún resumen.',
+            channel: 'Canal', published: 'Publicado', duration: 'Duración', summaryGeneratedOn: 'Resumen generado el', language: 'Idioma', length: 'Longitud',
+            page: 'Página', videoSummary: 'Resumen del Vídeo',
+            pasteButtonDisabledTitle: "Funcionalidad no disponible (se requiere HTTPS)",
         }
     };
+    
+    // Helper to get translated text
+    function getText(key, fallback) {
+        const lang = languageSelect.value || 'en';
+        return translations[lang]?.[key] || translations['en']?.[key] || fallback || key;
+    }
     
     // Language change - Apply translations
     languageSelect.addEventListener('change', function() {
@@ -1156,84 +1121,75 @@ document.addEventListener('DOMContentLoaded', function() {
         applyTranslations(lang);
         
         // If a summary exists, regenerate it in the new language
-        // Check if results area is visible and we are not currently loading/recalculating
         if (currentTranscription && videoData && !isLoading && !results.classList.contains('hidden')) {
-            console.log(`Language changed to ${lang}, regenerating summary.`);
-            // Find the currently active button to trigger handleLengthChange correctly
-            const activeLengthButton = document.querySelector('#results .btn-option.active') || document.querySelector(`.btn-option[data-length="${currentSummaryLength}"]`);
-            if (activeLengthButton) {
-                // Trigger handleLengthChange as if the current length button was clicked again
-                handleLengthChange({ target: activeLengthButton });
+            // Ensure we don't try to regenerate an error message
+            if (!currentSummary || !currentSummary.includes('<p class="text-red-600">')) {
+                console.log(`Language changed to ${lang}, regenerating summary.`);
+                const activeLengthButton = document.querySelector('#results .btn-option.active') || document.querySelector(`.btn-option[data-length="${currentSummaryLength}"]`);
+                if (activeLengthButton) {
+                    handleLengthChange({ target: activeLengthButton });
+                }
             } else {
-                console.warn("Could not find active length button to trigger regeneration.");
+                console.log(`Language changed to ${lang}, but previous result was an error. Not regenerating.`);
+                // Optionally clear the error message? Or leave it?
+                // summaryContent.innerHTML = ''; // Or update with a neutral message
             }
         } else if (isLoading){
-            console.log(`Language changed to ${lang}, but summary regeneration deferred until current process finishes.`);
-            // Optionally update loading text if needed:
-            updateLoadingState(translations[lang]?.loadingDefault || translations['en'].loadingDefault, parseInt(progressBar.style.width || '0'));
+            console.log(`Language changed to ${lang}, but summary regeneration deferred.`);
+            updateLoadingState(getText('loadingDefault', 'Analyzing...'), parseInt(progressBar.style.width || '0'));
         }
     });
     
     function applyTranslations(lang) {
-        const t = translations[lang] || translations['en']; // Fallback to English
         document.documentElement.lang = lang; // Update html lang attribute
         
-        // Helper function to safely update text content
-        const setText = (selector, key) => {
+        // Helper function to safely update text content/HTML/attributes using getText
+        const setText = (selector, key, fallback) => {
             const element = document.querySelector(selector);
-            if (element && t[key]) element.textContent = t[key];
-            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for selector '${selector}' in lang '${lang}'`);
-            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+            if (element) element.textContent = getText(key, fallback || '');
+            else console.warn(`Element not found for selector '${selector}' during translation`);
         };
-        // Helper function to safely update inner HTML
-        const setHTML = (selector, key, prefix = '', suffix = '') => {
+        const setHTML = (selector, key, fallback, prefix = '', suffix = '') => {
             const element = document.querySelector(selector);
-            if (element && t[key]) element.innerHTML = `${prefix}${t[key]}${suffix}`;
-            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for selector '${selector}' in lang '${lang}'`);
-            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+            if (element) element.innerHTML = `${prefix}${getText(key, fallback || '')}${suffix}`;
+            else console.warn(`Element not found for selector '${selector}' during translation`);
         };
-        // Helper function to safely update attributes
-        const setAttr = (selector, attr, key) => {
+        const setAttr = (selector, attr, key, fallback) => {
             const element = document.querySelector(selector);
-            if (element && t[key]) element.setAttribute(attr, t[key]);
-            else if (element && !t[key]) console.warn(`Missing translation key '${key}' for attribute '${attr}' on selector '${selector}' in lang '${lang}'`);
-            else if (!element) console.warn(`Element not found for selector '${selector}' during translation`);
+            if (element) element.setAttribute(attr, getText(key, fallback || ''));
+            else console.warn(`Element not found for selector '${selector}' during translation`);
         };
         
         // --- Apply translations using helpers ---
-        document.title = t.title;
-        setText('h1', 'h1');
-        setText('.max-w-3xl > p.text-subtle', 'heroP'); // Hero P
-        setText('.max-w-3xl > p.font-semibold', 'heroBadge'); // Hero Badge
-        setHTML('label[for="youtubeUrl"]', 'urlLabel', '<i class="fas fa-link accent" aria-hidden="true"></i> ');
-        setAttr('#youtubeUrl', 'placeholder', 'urlPlaceholder');
+        document.title = getText('title', "YouSummarize");
+        setText('h1', 'h1', "YouTube Summary");
+        setText('.max-w-3xl > p.text-subtle', 'heroP');
+        setText('.max-w-3xl > p.font-semibold', 'heroBadge');
+        setHTML('label[for="youtubeUrl"]', 'urlLabel', 'Paste your YouTube link here', '<i class="fas fa-link accent" aria-hidden="true"></i> ');
+        setAttr('#youtubeUrl', 'placeholder', 'urlPlaceholder', 'https://www.youtube.com/watch?v=...');
         setText('#youtubeForm p.text-xs', 'urlHelp');
-        setHTML('#summarizeBtn', 'submitBtn', '<i class="fas fa-magic" aria-hidden="true"></i> ');
-        setText('label[for="language"]', 'languageLabel');
-        setText('.popular-examples h3', 'exampleTitle');
-        setText('#loadingText', 'loadingDefault'); // Update default loading text
-        setText('#loadingState p.text-xs', 'loadingFewSecs');
-        setText('#results h2.font-serif', 'videoInfoTitle');
-        setHTML('#copyBtn', 'copyBtn', '<i class="far fa-copy" aria-hidden="true"></i> ');
-        setHTML('#downloadBtn', 'downloadBtn', '<i class="fas fa-download" aria-hidden="true"></i> ');
-        setText('.summary-length .text-xs', 'lengthLabel');
-        setText('.btn-option[data-length="short"]', 'lengthShort');
-        setText('.btn-option[data-length="medium"]', 'lengthMedium');
-        setText('.btn-option[data-length="long"]', 'lengthLong');
+        setHTML('#summarizeBtn', 'submitBtn', 'Generate Summary', '<i class="fas fa-magic" aria-hidden="true"></i> ');
+        setText('label[for="language"]', 'languageLabel', 'Language:');
+        setText('.popular-examples h3', 'exampleTitle', 'Or try an example:');
+        setText('#loadingText', 'loadingDefault', 'Analyzing...');
+        setText('#loadingState p.text-xs', 'loadingFewSecs', 'This may take a few seconds.');
+        setText('#results h2.font-serif', 'videoInfoTitle', 'Generated Summary');
+        setHTML('#copyBtn', 'copyBtn', 'Copy', '<i class="far fa-copy" aria-hidden="true"></i> ');
+        setHTML('#downloadBtn', 'downloadBtn', 'PDF', '<i class="fas fa-download" aria-hidden="true"></i> ');
+        setText('.summary-length .text-xs', 'lengthLabel', 'Detail:');
+        setText('.btn-option[data-length="short"]', 'lengthShort', 'Short');
+        setText('.btn-option[data-length="medium"]', 'lengthMedium', 'Medium');
+        setText('.btn-option[data-length="long"]', 'lengthLong', 'Detailed');
         
         setText('#how-and-why-title', 'howWhyTitle');
-        const features = document.querySelectorAll('.feature-card');
-        if(features.length >= 3) {
-            setText('.feature-card:nth-of-type(1) h3', 'feature1Title');
-            setText('.feature-card:nth-of-type(1) p', 'feature1Desc');
-            setText('.feature-card:nth-of-type(2) h3', 'feature2Title');
-            setText('.feature-card:nth-of-type(2) p', 'feature2Desc');
-            setText('.feature-card:nth-of-type(3) h3', 'feature3Title');
-            setText('.feature-card:nth-of-type(3) p', 'feature3Desc');
-        }
+        setText('.feature-card:nth-of-type(1) h3', 'feature1Title');
+        setText('.feature-card:nth-of-type(1) p', 'feature1Desc');
+        setText('.feature-card:nth-of-type(2) h3', 'feature2Title');
+        setText('.feature-card:nth-of-type(2) p', 'feature2Desc');
+        setText('.feature-card:nth-of-type(3) h3', 'feature3Title');
+        setText('.feature-card:nth-of-type(3) p', 'feature3Desc');
         
         setText('#faq-title', 'faqTitle');
-        // Update FAQ text if needed (requires IDs or more specific selectors for Q&A pairs)
         
         setText('#final-cta-title', 'ctaTitle');
         setText('.cta-container p.text-lg', 'ctaP');
@@ -1247,57 +1203,50 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const footerByLink = document.querySelector('footer a[href*="github.com/jp-fix"]');
         if (footerByLink && footerByLink.previousSibling && footerByLink.previousSibling.nodeType === Node.TEXT_NODE) {
-            footerByLink.previousSibling.textContent = ` ${t.footerBy} `; // Update 'par'/'by' text node
+            footerByLink.previousSibling.textContent = ` ${getText('footerBy', 'by')} `;
         }
         
-        // Update footer links by their assumed order or more specific selectors/IDs
         setText('footer .footer-links a:nth-of-type(1)', 'footerApi');
         setText('footer .footer-links a:nth-of-type(2)', 'footerPrivacy');
         setText('footer .footer-links a:nth-of-type(3)', 'footerTerms');
         setText('footer .footer-links a:nth-of-type(4)', 'footerContact');
         setText('footer .footer-links a:nth-of-type(5)', 'footerSitemap');
         
-        // Update BuyMeACoffee message if widget is present and uses data-message
+        // Update BuyMeACoffee message
         const bmcWidget = document.querySelector('.bmc-widget-container');
-        if (bmcWidget && bmcWidget.dataset && t.bmcMessage) {
-            bmcWidget.dataset.message = t.bmcMessage;
-            // Note: The widget might need reinitialization for the message to update visually
-            // if it's already rendered. This simple update might not work reliably without widget API.
+        if (bmcWidget && bmcWidget.dataset) {
+            bmcWidget.dataset.message = getText('bmcMessage');
         }
         
         // Update paste button title if it was disabled
         if (pasteButton && pasteButton.disabled) {
-            pasteButton.title = t.pasteButtonDisabledTitle || "Feature unavailable (HTTPS required)";
+            setAttr('#pasteButton', 'title', 'pasteButtonDisabledTitle', "Feature unavailable (HTTPS required)");
         }
     }
     
     
     // --- Initialisation ---
     
-    // Auto-detect browser language and set default
     function detectBrowserLanguage() {
         const browserLang = navigator.language || navigator.userLanguage || 'en';
-        const langCode = browserLang.split('-')[0]; // Get 'fr' from 'fr-FR'
+        const langCode = browserLang.split('-')[0];
         
-        // Check if the detected language is available in the select options
         if (Array.from(languageSelect.options).some(option => option.value === langCode)) {
             languageSelect.value = langCode;
         } else {
-            languageSelect.value = 'en'; // Default to English if browser lang not supported
+            languageSelect.value = 'en';
         }
-        // Trigger change event manually to apply initial language settings from detection
+        // Apply translations based on detected or default language
         applyTranslations(languageSelect.value);
     }
     
-    // Update current year in footer
     const currentYearSpan = document.getElementById('currentYear');
     if (currentYearSpan) {
         currentYearSpan.textContent = new Date().getFullYear();
     }
     
-    // Initial setup
-    detectBrowserLanguage(); // Detect language and apply translations
-    resetUI(); // Ensure clean state on load
+    detectBrowserLanguage();
+    resetUI();
     
     console.log("YouSummarize App Initialized.");
     
