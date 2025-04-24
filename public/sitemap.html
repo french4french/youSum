@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plan du site YouSummarize - Trouvez facilement toutes les pages de notre application de résumé vidéo YouTube">
+    <title>Plan du site - YouSummarize</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./assets/images/favicon.png">
+    <style>
+        :root {
+            --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            --bg-color: #f0eee6;
+            --card-bg-color: #ffffff;
+            --text-color-main: #333333;
+            --text-color-subtle: #656358;
+            --border-color: #d0cec2;
+            --accent-color: #4f46e5;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-sans);
+            color: var(--text-color-main);
+        }
+        .font-serif { font-family: var(--font-serif); }
+        .bg-card { background-color: var(--card-bg-color); }
+        .border-subtle { border-color: var(--border-color); }
+        .accent { color: var(--accent-color); }
+        .text-subtle { color: var(--text-color-subtle); }
+    </style>
+</head>
+<body class="min-h-screen">
+<div class="shadow-lg bg-card m-2 rounded-2xl relative">
+    <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
+
+        <!-- Navigation -->
+        <nav class="w-full flex justify-between items-center mb-16">
+            <div class="flex gap-2 items-center">
+                <a href="./index.html" class="flex gap-2 items-center">
+                    <img alt="YouSummarize Logo"
+                         width="200" height="60"
+                         src="./assets/images/logo.webp"
+                    />
+                </a>
+            </div>
+            <a href="./index.html" class="px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover:bg-[#E9E5D8] border border-subtle shadow-sm w-fit text-sm transition duration-150">
+                <i class="fas fa-home text-subtle"></i>
+                <span class="py-0 shrink-0 font-medium text-subtle">Retour à l'accueil</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="mb-16">
+            <div class="mb-12 text-center">
+                <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">Plan du site</h1>
+                <p class="text-subtle max-w-2xl mx-auto">Retrouvez facilement toutes les pages et sections disponibles sur YouSummarize.</p>
+            </div>
+
+            <div class="bg-card p-8 rounded-xl shadow-md border border-subtle max-w-4xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Main Pages -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-sitemap accent"></i> Pages principales
+                        </h2>
+                        <ul class="space-y-3">
+                            <li>
+                                <a href="/" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-home text-subtle"></i>
+                                    <span>Accueil</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/privacy" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-shield-alt text-subtle"></i>
+                                    <span>Politique de confidentialité</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/terms" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-file-contract text-subtle"></i>
+                                    <span>Conditions d'utilisation</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/contact" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-envelope text-subtle"></i>
+                                    <span>Contact</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Sections on Homepage -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-layer-group accent"></i> Sections sur la page d'accueil
+                        </h2>
+                        <ul class="space-y-3">
+                            <li>
+                                <a href="/#form-section" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-magic text-subtle"></i>
+                                    <span>Générateur de résumé</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/#how-and-why" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-lightbulb text-subtle"></i>
+                                    <span>Comment ça marche</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/#faq" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                    <i class="fas fa-question-circle text-subtle"></i>
+                                    <span>Foire aux questions</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Resources and Documentation -->
+                <div class="mt-12">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-book-open accent"></i> Ressources et Documentation
+                    </h2>
+                    <ul class="space-y-3 grid md:grid-cols-2 gap-x-8">
+                        <li>
+                            <a href="https://github.com/jp-fix/youSum" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                <i class="fab fa-github text-subtle"></i>
+                                <span>Code source (GitHub)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/api-docs" class="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-[#f0eee6] transition-colors">
+                                <i class="fas fa-code text-subtle"></i>
+                                <span>Documentation API</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-subtle/50 pt-8 pb-6 mt-12 lg:mt-16 text-xs text-subtle">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <p>© <span id="currentYear">2024</span> YouSummarize · par <a href="https://github.com/jp-fix" class="hover:text-main font-medium">jp-fix</a></p>
+                </div>
+                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end">
+                    <a href="/privacy" class="hover:text-main transition">Confidentialité</a>
+                    <a href="/terms" class="hover:text-main transition">Conditions</a>
+                    <a href="/contact" class="hover:text-main transition">Contact</a>
+                    <a href="./sitemap.html" class="hover:text-main transition">Plan du site</a>
+                </nav>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

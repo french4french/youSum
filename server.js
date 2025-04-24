@@ -6,6 +6,7 @@ require('dotenv').config();
 
 // Importer nos services
 const transcriptService = require('./services/transcript');
+const sitemapService = require('./services/sitemap');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -163,12 +164,69 @@ app.post('/api/summarize', async (req, res) => {
     }
 });
 
+// Route explicite pour le sitemap.xml
+app.get('/sitemap.xml', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
+});
+
+// Route pour le robots.txt
+app.get('/robots.txt', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
+});
+
 // Route par défaut pour servir l'application frontend (SPA)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Démarrer le serveur
+// Route par défaut pour servir l'application frontend (SPA)
+app.get('*', (req, res, next) => {
+    // Vérifier si l'URL correspond à une extension de fichier
+    const fileExtension = path.extname(req.path);
+    
+    if (fileExtension) {
+        // Si c'est une demande de fichier (comme .js, .css, .png, etc.)
+        // et que le fichier n'a pas été trouvé par express.static,
+        // on passe au middleware suivant qui sera notre gestionnaire 404
+        next();
+    } else {
+        // Pour les routes SPA (sans extension), servir index.html
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+});
+
+// Gestionnaire pour les fichiers non trouvés (404)
+app.use((req, res) => {
+    // Vérifier si la demande concerne un fichier
+    const fileExtension = path.extname(req.path);
+    
+    if (fileExtension) {
+        // Si c'est un fichier non trouvé, retourner une simple erreur 404
+        res.status(404).send('File not found');
+    } else {
+        // Pour les routes non trouvées, servir notre page 404 personnalisée
+        res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+    }
+});
+
+// Fonction de configuration du sitemap
+function setupSitemap() {
+    // Définissez votre URL de base en fonction de l'environnement
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    
+    // Générer le sitemap au démarrage
+    sitemapService.generateSitemap(baseUrl);
+    
+    // Programmer une regénération périodique
+    setInterval(() => {
+        sitemapService.generateSitemap(baseUrl);
+    }, 24 * 60 * 60 * 1000); // Une fois par jour
+}
+
+// Générer le sitemap avant de démarrer le serveur
+setupSitemap();
+
+// Démarrer le serveur (une seule fois)
 app.listen(PORT, () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
     console.log(`Accédez à l'application: http://localhost:${PORT}`);

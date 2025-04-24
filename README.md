@@ -55,9 +55,11 @@ YOUTUBE_API_KEY=votre_clé_youtube_api
 # Clé API Gemini (pour générer les résumés avec l'IA)
 GEMINI_API_KEY=votre_clé_gemini_api
 
+# URL de base pour le sitemap et autres liens absolus
+BASE_URL=https://yoursitedomain.com
+
 # Port du serveur (optionnel, par défaut 3000)
 PORT=3000
-```
 
 ## 🚀 Utilisation
 
