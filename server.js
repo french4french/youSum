@@ -206,7 +206,7 @@ app.post('/api/summarize', async (req, res) => {
             return res.status(400).json({ error: 'Transcription requise' });
         }
         
-        // --- Génération du Prompt Amélioré avec Formatage Visuel Optimisé ---
+        // --- Génération du Prompt pour une mise en page ultra-aérée ---
         let prompt = '';
         const videoTitle = videoInfo && videoInfo.title ? `"${videoInfo.title}"` : 'Titre inconnu';
         const channelName = videoInfo && videoInfo.channelTitle ? `${videoInfo.channelTitle}` : 'Chaîne inconnue';
@@ -216,182 +216,212 @@ app.post('/api/summarize', async (req, res) => {
         
         if (language === 'fr') {
             prompt = `
-# CONTEXTE
-Tu es un expert en création de résumés vidéo clairs, concis et visuellement structurés. Ta mission est de générer un résumé d'une vidéo YouTube avec une mise en page exceptionnelle et une hiérarchisation claire des informations.
+# MISSION
+Tu es un designer de contenus textuels spécialisé dans la création de résumés ultra-lisibles. Ton objectif est de transformer une transcription vidéo en un résumé extrêmement aéré et visuellement structuré qui peut être parcouru en quelques secondes.
 
 # INFORMATIONS SUR LA VIDÉO
 - Titre: ${videoTitle}
 - Chaîne: ${channelName}
 - Type de transcription: ${transcriptTypeText}
 
-# INSTRUCTIONS DE MISE EN FORME ET HIÉRARCHISATION
+# DIRECTIVES VISUELLES ABSOLUES
+- Utilise au minimum TROIS sauts de ligne entre chaque section principale pour créer un espacement visuel important (##)
+- Utilise DEUX sauts de ligne entre sous-sections (###)
+- Ajoute des lignes de séparation horizontales (---) entre les sections principales
+- Utilise systématiquement des emojis pertinents comme points de repère visuels
+- Limite CHAQUE paragraphe à 2-3 phrases MAXIMUM
+- Alterne entre texte normal, **gras**, et *italique* pour créer du rythme visuel
+- Utilise abondamment les puces et les listes numérotées
+- Mets en évidence tous les concepts clés en **gras**
+- Ajoute des blocs de citation pour les informations importantes
+- Ajoute des espaces visuels même à l'intérieur des listes à puces
 
-## Structure et espacement
-- Utilise **deux sauts de ligne** entre les sections principales
-- Utilise **un saut de ligne** entre les paragraphes et sous-sections
-- Ajoute un espacement visuel avant et après les listes à puces
-- Assure-toi que chaque section est visuellement distincte des autres
+# STRUCTURE IMPOSÉE (MARKDOWN ULTRA-AÉRÉ)
 
-## Hiérarchisation visuelle
-- Utilise les niveaux de titres de façon cohérente: ## pour sections principales, ### pour sous-sections
-- **Mets en gras les concepts clés** et les termes importants dans chaque section
-- *Utilise l'italique* pour les nuances, exemples ou expressions spécifiques
-- Utilise le formatage ~~barré~~ uniquement si nécessaire pour montrer une correction ou alternative
-- Crée une hiérarchie visuelle claire avec l'indentation des listes
+## 🔍 **En Bref**
 
-## Formatage spécial pour l'impact
-- Pour les définitions importantes: **Terme clé**: explication...
-- Pour les citations: > Citation importante ou exemple concret
-- Pour les astuces ou conseils pratiques: 💡 *Astuce:* conseil pratique...
-- Pour les avertissements si nécessaire: ⚠️ *Attention:* point de vigilance...
-
-# FORMAT DE SORTIE (MARKDOWN AMÉLIORÉ)
-Ton résumé doit suivre précisément cette structure avec la mise en forme indiquée:
-
-## **En Bref**
-
-Un résumé concis et impactant de 2-3 phrases qui présente l'essence de la vidéo. Cette section doit être facilement scannable et donner envie de lire la suite.
+[2-3 phrases percutantes maximum sur l'essence de la vidéo]
 
 
-## **Points Essentiels**
 
-Une liste aérée des informations cruciales, chaque point commençant par un verbe d'action ou un concept clé en **gras**:
-
-• **[Concept clé]**: Explication concise et claire...
-• **[Action recommandée]**: Description de l'action et son bénéfice...
-• **[Technique principale]**: Explication de la technique et son application...
+---
 
 
-## **Résumé Détaillé**
 
-### **[Premier thème principal]**
+## 💡 **Points Essentiels**
 
-Un paragraphe introductif qui présente ce thème spécifique. Les **termes importants** sont en gras, et les *nuances ou exemples* en italique.
+• **[Premier concept clé]**: [Explication très concise en une phrase]
 
-Un second paragraphe si nécessaire pour développer davantage ce thème, avec toujours une attention particulière à la **mise en valeur des éléments clés**.
+• **[Deuxième concept clé]**: [Explication très concise en une phrase]
 
-### **[Deuxième thème principal]**
+• **[Troisième concept clé]**: [Explication très concise en une phrase]
 
-Description claire et concise, en mettant l'accent sur les **concepts essentiels** et leur application pratique.
-
-> Si pertinent, inclure une citation ou un exemple concret dans un bloc de citation qui se démarque visuellement.
-
-### **[Troisième thème principal]**
-
-Explication détaillée avec **mise en évidence** des informations cruciales. Conserver des paragraphes courts et aérés pour faciliter la lecture.
-
-💡 *Astuce pratique:* Inclure un conseil directement applicable en lien avec ce thème.
+• **[Quatrième concept clé]**: [Explication très concise en une phrase]
 
 
-## **Informations Complémentaires**
 
-Une liste bien espacée et hiérarchisée d'informations additionnelles pertinentes:
+---
 
-• **Références citées**: Personnes, livres, études mentionnés dans la vidéo...
-• **Ressources recommandées**: Outils, sites web, applications suggérés...
-• **Pour aller plus loin**: Suggestions de sujets connexes ou d'approfondissement...
 
-# CONSIGNES STYLISTIQUES
-- Utilise un ton professionnel mais accessible
-- Préfère les phrases courtes et directes
-- Emploie un vocabulaire précis mais non jargonnant
-- Assure une cohérence visuelle dans l'ensemble du document
-- Utilise les listes à puces pour faciliter la lecture en diagonale
-- Crée un document qui invite à la lecture par sa structure aérée
+
+## 📚 **Résumé Détaillé**
+
+
+### 🔹 **[Premier thème]**
+
+[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
+
+> **Citation ou point essentiel mis en valeur**
+
+[Second paragraphe très court si nécessaire]
+
+
+### 🔹 **[Deuxième thème]**
+
+[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
+
+**Exemples concrets:**
+1. [Premier exemple court]
+2. [Deuxième exemple court]
+
+
+### 🔹 **[Troisième thème]**
+
+[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
+
+💭 *Réflexion:* [Une pensée ou citation pertinente]
+
+
+
+---
+
+
+
+## 🔗 **Informations Complémentaires**
+
+• **Références citées**: [Liste très concise]
+
+• **Ressources recommandées**: [Liste très concise]
+
+• **Pour aller plus loin**: [Suggestion brève]
+
+🔑 **Conseil final**: [Un conseil pratique pour conclure]
+
+# CONSIGNES STYLISTIQUES SUPPLÉMENTAIRES
+- Crée un document qui respire visuellement
+- Utilise des phrases courtes et simples
+- Présente l'information de façon extrêmement scannable
+- Assure-toi que le document peut être compris même en le parcourant en diagonale
+- N'hésite pas à utiliser des structures visuelles comme des mini-tableaux pour comparer des informations
 
 # TRANSCRIPTION
 ${transcription}
 `;
         } else { // language 'en' or default
             prompt = `
-# CONTEXT
-You are an expert in creating clear, concise, and visually structured video summaries. Your mission is to generate a summary of a YouTube video with exceptional layout and clear information hierarchy.
+# MISSION
+You are a content designer specializing in creating ultra-readable summaries. Your goal is to transform a video transcript into an extremely airy and visually structured summary that can be scanned in seconds.
 
 # VIDEO INFORMATION
 - Title: ${videoTitle}
 - Channel: ${channelName}
 - Transcript type: ${transcriptTypeText}
 
-# FORMATTING AND HIERARCHY INSTRUCTIONS
+# ABSOLUTE VISUAL GUIDELINES
+- Use a minimum of THREE line breaks between each main section to create significant visual spacing (##)
+- Use TWO line breaks between subsections (###)
+- Add horizontal separation lines (---) between main sections
+- Systematically use relevant emojis as visual landmarks
+- Limit EACH paragraph to 2-3 sentences MAXIMUM
+- Alternate between normal text, **bold**, and *italic* to create visual rhythm
+- Use bullet points and numbered lists abundantly
+- Highlight all key concepts in **bold**
+- Add quote blocks for important information
+- Add visual spaces even within bullet point lists
 
-## Structure and spacing
-- Use **two line breaks** between main sections
-- Use **one line break** between paragraphs and subsections
-- Add visual spacing before and after bullet point lists
-- Ensure each section is visually distinct from others
+# IMPOSED STRUCTURE (ULTRA-AIRY MARKDOWN)
 
-## Visual hierarchy
-- Use heading levels consistently: ## for main sections, ### for subsections
-- **Bold key concepts** and important terms in each section
-- *Italicize* nuances, examples, or specific expressions
-- Use ~~strikethrough~~ formatting only if necessary to show a correction or alternative
-- Create a clear visual hierarchy with list indentation
+## 🔍 **In Brief**
 
-## Special formatting for impact
-- For important definitions: **Key Term**: explanation...
-- For quotes: > Important quote or concrete example
-- For tips or practical advice: 💡 *Tip:* practical advice...
-- For warnings if necessary: ⚠️ *Caution:* point to watch out for...
-
-# OUTPUT FORMAT (ENHANCED MARKDOWN)
-Your summary must follow this structure precisely with the indicated formatting:
-
-## **In Brief**
-
-A concise and impactful summary of 2-3 sentences that presents the essence of the video. This section should be easily scannable and make the reader want to continue.
+[2-3 impactful sentences maximum on the essence of the video]
 
 
-## **Key Takeaways**
 
-A well-spaced list of crucial information, each point starting with an action verb or key concept in **bold**:
-
-• **[Key concept]**: Concise and clear explanation...
-• **[Recommended action]**: Description of the action and its benefit...
-• **[Main technique]**: Explanation of the technique and its application...
+---
 
 
-## **Detailed Summary**
 
-### **[First main theme]**
+## 💡 **Key Takeaways**
 
-An introductory paragraph that presents this specific theme. **Important terms** are in bold, and *nuances or examples* in italics.
+• **[First key concept]**: [Very concise explanation in one sentence]
 
-A second paragraph if necessary to further develop this theme, always with particular attention to **highlighting key elements**.
+• **[Second key concept]**: [Very concise explanation in one sentence]
 
-### **[Second main theme]**
+• **[Third key concept]**: [Very concise explanation in one sentence]
 
-Clear and concise description, emphasizing **essential concepts** and their practical application.
-
-> If relevant, include a quote or concrete example in a visually distinct quote block.
-
-### **[Third main theme]**
-
-Detailed explanation with **highlighting** of crucial information. Keep paragraphs short and well-spaced for easy reading.
-
-💡 *Practical tip:* Include a directly applicable tip related to this theme.
+• **[Fourth key concept]**: [Very concise explanation in one sentence]
 
 
-## **Additional Information**
 
-A well-spaced and hierarchical list of relevant additional information:
+---
 
-• **Cited references**: People, books, studies mentioned in the video...
-• **Recommended resources**: Suggested tools, websites, applications...
-• **To go further**: Suggestions for related topics or deeper exploration...
 
-# STYLISTIC GUIDELINES
-- Use a professional but accessible tone
-- Prefer short and direct sentences
-- Use precise but non-jargon vocabulary
-- Ensure visual consistency throughout the document
-- Use bullet points to facilitate diagonal reading
-- Create a document that invites reading through its airy structure
+
+## 📚 **Detailed Summary**
+
+
+### 🔹 **[First theme]**
+
+[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
+
+> **Quote or essential point highlighted**
+
+[Very short second paragraph if necessary]
+
+
+### 🔹 **[Second theme]**
+
+[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
+
+**Concrete examples:**
+1. [Short first example]
+2. [Short second example]
+
+
+### 🔹 **[Third theme]**
+
+[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
+
+💭 *Reflection:* [A relevant thought or quote]
+
+
+
+---
+
+
+
+## 🔗 **Additional Information**
+
+• **Cited references**: [Very concise list]
+
+• **Recommended resources**: [Very concise list]
+
+• **To go further**: [Brief suggestion]
+
+🔑 **Final tip**: [A practical tip to conclude]
+
+# ADDITIONAL STYLISTIC GUIDELINES
+- Create a document that breathes visually
+- Use short and simple sentences
+- Present information in an extremely scannable way
+- Ensure the document can be understood even when skimmed diagonally
+- Don't hesitate to use visual structures like mini-tables to compare information
 
 # TRANSCRIPT
 ${transcription}
 `;
         }
-        // --- Fin de la Génération du Prompt Amélioré ---
+        // --- Fin de la Génération du Prompt Ultra-Aéré ---
         
         if (!process.env.GEMINI_API_KEY) {
             console.error('Erreur: Clé API Gemini (GEMINI_API_KEY) manquante dans .env');
@@ -426,18 +456,28 @@ ${transcription}
             const finishReason = candidate.finishReason;
             
             if (textContent && finishReason === 'STOP') {
-                // Améliorer davantage le rendu Markdown pour assurer un affichage optimal
+                // Post-traitement pour garantir l'espacement visuel
                 const enhancedMarkdown = textContent.trim()
-                    // S'assurer que les titres principaux ont un espacement adéquat
-                    .replace(/\n## /g, '\n\n## ')
-                    // S'assurer que les sous-titres ont un espacement adéquat
-                    .replace(/\n### /g, '\n\n### ')
-                    // Ajouter un espacement avant les listes à puces
+                    // Ajouter des espacements triple entre sections principales (##)
+                    .replace(/\n## /g, '\n\n\n\n## ')
+                    // Ajouter des espacements doubles entre sous-sections (###)
+                    .replace(/\n### /g, '\n\n\n### ')
+                    // Assurer que les séparateurs horizontaux ont de l'espace
+                    .replace(/\n---\n/g, '\n\n---\n\n')
+                    // Ajouter de l'espace avant chaque puce
                     .replace(/\n• /g, '\n\n• ')
-                    // Normaliser l'espacement entre les sections
-                    .replace(/\n\n\n+/g, '\n\n')
-                    // Ajouter un espacement après les listes à puces
-                    .replace(/\n• (.*?)(?=\n[^•])/gs, '\n• $1\n');
+                    // Ajouter un espace après les listes à puces
+                    .replace(/\n• (.*?)(?=\n[^•])/gs, '\n• $1\n')
+                    // Ajouter de l'espace avant les citations
+                    .replace(/\n>/g, '\n\n>')
+                    // Ajouter de l'espace après les citations
+                    .replace(/\n> (.*?)(?=\n[^>])/gs, '\n> $1\n\n')
+                    // Nettoyer les espaces excessifs
+                    .replace(/\n\n\n\n+/g, '\n\n\n\n')
+                    // Ajouter de l'espace avant les listes numérotées
+                    .replace(/\n\d+\./g, '\n\n$&')
+                    // Ajouter du caractère visuel avec des emojis si pas assez présents
+                    .replace(/## ([^🔍💡📚🔗])/g, '## 📌 $1');
                 
                 return res.json({
                     summary: enhancedMarkdown
