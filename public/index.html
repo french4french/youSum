@@ -132,7 +132,7 @@
 <div class="shadow-lg bg-card m-2 rounded-2xl relative">
     <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
 
-        <!-- Navigation with "Star us" CTA -->
+        <!-- Navigation with Buy Me a Coffee Button -->
         <nav class="w-full flex justify-between items-center mb-10 md:mb-16">
             <div class="flex gap-2 items-center">
                 <!-- Logo avec dimensions explicites et srcset -->
@@ -143,14 +143,11 @@
                     />
                 </a>
             </div>
-            <!-- Lien externe avec rel="external" -->
-            <a href="https://github.com/Jp-fix/youSum"
-               target="_blank"
-               rel="noopener noreferrer external"
-               class="github-star-btn px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover-gradient border border-subtle shadow-sm w-fit text-sm transition duration-150">
-                <i class="fab fa-github text-lg text-subtle" aria-hidden="true"></i>
-                <span class="py-0 shrink-0 font-medium text-subtle">Open Source GitHub</span>
-            </a>
+
+            <!-- Bouton Buy Me a Coffee -->
+            <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="jpfix_" data-color="#4f46e5" data-emoji=""  data-font="Cookie" data-text="Buy me a café" data-outline-color="#ffffff" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+            <!-- Fin du Bouton Buy Me a Coffee -->
+
         </nav>
 
         <main class="flex flex-col w-full max-w-full gap-12 md:gap-16 items-center my-auto">
@@ -177,14 +174,25 @@
                             <i class="fas fa-link accent" aria-hidden="true"></i>
                             Collez votre lien YouTube ici
                         </label>
-                        <input
-                                type="url"
-                                id="youtubeUrl"
-                                class="px-4 py-3 w-full border-2 border-subtle rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none text-base transition duration-200 bg-white shadow-inner"
-                                placeholder="https://www.youtube.com/watch?v=..."
-                                required
-                                autofocus
-                        >
+                        <div class="relative flex items-center">
+                            <input
+                                    type="url"
+                                    id="youtubeUrl"
+                                    class="pl-4 pr-12 py-3 w-full border-2 border-subtle rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none text-base transition duration-200 bg-white shadow-inner"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            required
+                            autofocus
+                            >
+                            <button
+                                    type="button"
+                            id="pasteButton"
+                            title="Coller depuis le presse-papiers"
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-subtle hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 rounded-md transition-colors duration-150"
+                            aria-label="Coller le lien depuis le presse-papiers"
+                            >
+                            <i class="fas fa-paste text-lg" aria-hidden="true"></i><span> coller </span>
+                            </button>
+                        </div>
                         <p class="text-xs text-subtle mt-2">Fonctionne avec les vidéos publiques disposant de sous-titres.</p>
                     </div>
 
@@ -405,13 +413,12 @@
                     <a href="./terms.html" class="hover:text-main transition">Conditions</a>
                     <a href="./contact.html" class="hover:text-main transition">Contact</a>
                     <a href="./sitemap.html" class="hover:text-main transition">Plan du site</a>
+                    <a href="https://github.com/Jp-fix/youSum"  target="_blank" rel="noopener noreferrer external" class="hover:text-main transition"><i class="fab fa-github text-lg text-subtle" aria-hidden="true"></i></a>
                 </nav>
             </div>
         </footer>
     </div>
 </div>
-
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="jpfix_" data-description="Support me on Buy me a coffee!" data-message="Merci pour votre soutien ! Gardons ce service gratuit !" data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 
 <!-- Toast Notification Structure -->
 <div id="toast" class="fixed bottom-5 right-5 bg-main text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 text-sm opacity-0 translate-y-3 transition-all duration-300 ease-out z-50" role="alert" aria-live="assertive">
