@@ -206,7 +206,7 @@ app.post('/api/summarize', async (req, res) => {
             return res.status(400).json({ error: 'Transcription requise' });
         }
         
-        // --- Génération du Prompt pour une mise en page ultra-aérée ---
+        // --- Génération du Prompt pour HTML directement formaté ---
         let prompt = '';
         const videoTitle = videoInfo && videoInfo.title ? `"${videoInfo.title}"` : 'Titre inconnu';
         const channelName = videoInfo && videoInfo.channelTitle ? `${videoInfo.channelTitle}` : 'Chaîne inconnue';
@@ -216,212 +216,289 @@ app.post('/api/summarize', async (req, res) => {
         
         if (language === 'fr') {
             prompt = `
-# MISSION
-Tu es un designer de contenus textuels spécialisé dans la création de résumés ultra-lisibles. Ton objectif est de transformer une transcription vidéo en un résumé extrêmement aéré et visuellement structuré qui peut être parcouru en quelques secondes.
+# CONSIGNE ABSOLUE
+Tu dois générer un résumé en HTML directement formaté avec des styles intégrés pour garantir un espacement optimal. N'utilise PAS de Markdown standard mais du HTML complet.
 
 # INFORMATIONS SUR LA VIDÉO
 - Titre: ${videoTitle}
 - Chaîne: ${channelName}
 - Type de transcription: ${transcriptTypeText}
 
-# DIRECTIVES VISUELLES ABSOLUES
-- Utilise au minimum TROIS sauts de ligne entre chaque section principale pour créer un espacement visuel important (##)
-- Utilise DEUX sauts de ligne entre sous-sections (###)
-- Ajoute des lignes de séparation horizontales (---) entre les sections principales
-- Utilise systématiquement des emojis pertinents comme points de repère visuels
-- Limite CHAQUE paragraphe à 2-3 phrases MAXIMUM
-- Alterne entre texte normal, **gras**, et *italique* pour créer du rythme visuel
-- Utilise abondamment les puces et les listes numérotées
-- Mets en évidence tous les concepts clés en **gras**
-- Ajoute des blocs de citation pour les informations importantes
-- Ajoute des espaces visuels même à l'intérieur des listes à puces
+# FORMAT HTML EXIGÉ
+Utilise cette structure HTML avec des styles intégrés:
 
-# STRUCTURE IMPOSÉE (MARKDOWN ULTRA-AÉRÉ)
+\`\`\`html
+<div class="summary-container">
+  <!-- En Bref Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">🔍</span> En Bref
+    </h2>
+    <p style="margin-bottom: 16px; line-height: 1.6;">
+      [2-3 phrases sur l'essence de la vidéo]
+    </p>
+  </div>
+  
+  <!-- Points Essentiels Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">💡</span> Points Essentiels
+    </h2>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>[Premier concept]</strong>: [Explication en UNE phrase]
+      </li>
+      <!-- Répéter pour chaque point essentiel -->
+    </ul>
+  </div>
+  
+  <!-- Résumé Détaillé Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">📚</span> Résumé Détaillé
+    </h2>
+    
+    <!-- Premier Thème -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Premier thème]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraphe avec <strong>mots-clés en gras</strong>]
+      </p>
+      <!-- Citation ou élément supplémentaire si pertinent -->
+      <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 16px; margin: 16px 0; font-style: italic;">
+        [Citation ou phrase d'impact si pertinente]
+      </blockquote>
+    </div>
+    
+    <!-- Deuxième Thème -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Deuxième thème]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraphe avec <strong>mots-clés en gras</strong>]
+      </p>
+      <!-- Exemples -->
+      <div style="margin-top: 12px; margin-bottom: 16px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Exemples concrets:</p>
+        <p style="margin-bottom: 8px; padding-left: 16px;">Bloc de 9h à 12h: travail sur projet X</p>
+        <p style="margin-bottom: 8px; padding-left: 16px;">Bloc de 14h à 16h: réunions</p>
+      </div>
+    </div>
+    
+    <!-- Troisième Thème -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Troisième thème]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraphe avec <strong>mots-clés en gras</strong>]
+      </p>
+      <!-- Réflexion -->
+      <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 12px; margin-bottom: 16px; display: flex; align-items: flex-start;">
+        <span style="margin-right: 8px;">💭</span>
+        <p style="margin: 0; font-style: italic;"><strong>Réflexion:</strong> [Une pensée ou conseil pertinent]</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Informations Complémentaires Section -->
+  <div class="summary-section">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">🔗</span> Informations Complémentaires
+    </h2>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>Références citées</strong>: [Liste concise]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>Ressources recommandées</strong>: [Liste concise]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>Pour aller plus loin</strong>: [Suggestion brève]
+      </li>
+    </ul>
+    <!-- Conseil final -->
+    <div style="background-color: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; align-items: flex-start;">
+      <span style="margin-right: 8px;">🔑</span>
+      <p style="margin: 0;"><strong>Conseil final:</strong> [Un conseil pratique]</p>
+    </div>
+  </div>
+</div>
+\`\`\`
 
-## 🔍 **En Bref**
+# INSTRUCTIONS SPÉCIFIQUES
+1. Utilise EXACTEMENT cette structure HTML, en remplaçant uniquement le contenu entre crochets.
+2. Ne modifie PAS les styles CSS intégrés - ils sont essentiels pour l'espacement.
+3. Garde la même hiérarchie des titres et des sections.
+4. Les emojis doivent être conservés comme marqueurs visuels.
+5. Ajoute tous les points essentiels et thèmes nécessaires dans la même structure.
+6. Maintiens les styles définis comme "margin-bottom" et "padding" pour garantir l'espacement.
+7. Respecte les attributs style originaux, ne les simplifie pas.
 
-[2-3 phrases percutantes maximum sur l'essence de la vidéo]
-
-
-
----
-
-
-
-## 💡 **Points Essentiels**
-
-• **[Premier concept clé]**: [Explication très concise en une phrase]
-
-• **[Deuxième concept clé]**: [Explication très concise en une phrase]
-
-• **[Troisième concept clé]**: [Explication très concise en une phrase]
-
-• **[Quatrième concept clé]**: [Explication très concise en une phrase]
-
-
-
----
-
-
-
-## 📚 **Résumé Détaillé**
-
-
-### 🔹 **[Premier thème]**
-
-[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
-
-> **Citation ou point essentiel mis en valeur**
-
-[Second paragraphe très court si nécessaire]
-
-
-### 🔹 **[Deuxième thème]**
-
-[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
-
-**Exemples concrets:**
-1. [Premier exemple court]
-2. [Deuxième exemple court]
-
-
-### 🔹 **[Troisième thème]**
-
-[Paragraphe court de 2-3 phrases maximum avec **mots-clés en gras**]
-
-💭 *Réflexion:* [Une pensée ou citation pertinente]
-
-
-
----
-
-
-
-## 🔗 **Informations Complémentaires**
-
-• **Références citées**: [Liste très concise]
-
-• **Ressources recommandées**: [Liste très concise]
-
-• **Pour aller plus loin**: [Suggestion brève]
-
-🔑 **Conseil final**: [Un conseil pratique pour conclure]
-
-# CONSIGNES STYLISTIQUES SUPPLÉMENTAIRES
-- Crée un document qui respire visuellement
-- Utilise des phrases courtes et simples
-- Présente l'information de façon extrêmement scannable
-- Assure-toi que le document peut être compris même en le parcourant en diagonale
-- N'hésite pas à utiliser des structures visuelles comme des mini-tableaux pour comparer des informations
+# CONTENU ET STYLE
+- Limite strictement le résumé "En Bref" à 2-3 phrases concises.
+- Les "Points Essentiels" doivent être clairs, commençant chacun par un terme en gras.
+- Dans le "Résumé Détaillé", crée 2-4 thèmes principaux, chacun avec un titre pertinent.
+- Pour chaque thème, fournis un paragraphe court de 2-3 phrases maximum.
+- Mets en évidence les concepts clés en les encadrant de balises <strong></strong>.
+- Les exemples, citations et réflexions sont optionnels - inclus-les seulement s'ils sont pertinents.
 
 # TRANSCRIPTION
 ${transcription}
+
+# IMPORTANT
+N'oublie pas que tu dois générer le HTML directement, pas du Markdown. Cette approche garantit que l'espacement et la mise en forme seront préservés exactement comme nous le souhaitons.
 `;
         } else { // language 'en' or default
             prompt = `
-# MISSION
-You are a content designer specializing in creating ultra-readable summaries. Your goal is to transform a video transcript into an extremely airy and visually structured summary that can be scanned in seconds.
+# ABSOLUTE DIRECTIVE
+You must generate a summary in directly formatted HTML with integrated styles to guarantee optimal spacing. Do NOT use standard Markdown but complete HTML.
 
 # VIDEO INFORMATION
 - Title: ${videoTitle}
 - Channel: ${channelName}
 - Transcript type: ${transcriptTypeText}
 
-# ABSOLUTE VISUAL GUIDELINES
-- Use a minimum of THREE line breaks between each main section to create significant visual spacing (##)
-- Use TWO line breaks between subsections (###)
-- Add horizontal separation lines (---) between main sections
-- Systematically use relevant emojis as visual landmarks
-- Limit EACH paragraph to 2-3 sentences MAXIMUM
-- Alternate between normal text, **bold**, and *italic* to create visual rhythm
-- Use bullet points and numbered lists abundantly
-- Highlight all key concepts in **bold**
-- Add quote blocks for important information
-- Add visual spaces even within bullet point lists
+# REQUIRED HTML FORMAT
+Use this HTML structure with integrated styles:
 
-# IMPOSED STRUCTURE (ULTRA-AIRY MARKDOWN)
+\`\`\`html
+<div class="summary-container">
+  <!-- In Brief Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">🔍</span> In Brief
+    </h2>
+    <p style="margin-bottom: 16px; line-height: 1.6;">
+      [2-3 sentences on the essence of the video]
+    </p>
+  </div>
+  
+  <!-- Key Takeaways Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">💡</span> Key Takeaways
+    </h2>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>[First concept]</strong>: [Explanation in ONE sentence]
+      </li>
+      <!-- Repeat for each key point -->
+    </ul>
+  </div>
+  
+  <!-- Detailed Summary Section -->
+  <div class="summary-section" style="margin-bottom: 24px;">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">📚</span> Detailed Summary
+    </h2>
+    
+    <!-- First Theme -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [First theme]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraph with <strong>keywords in bold</strong>]
+      </p>
+      <!-- Quote or additional element if relevant -->
+      <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 16px; margin: 16px 0; font-style: italic;">
+        [Quote or impactful sentence if relevant]
+      </blockquote>
+    </div>
+    
+    <!-- Second Theme -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Second theme]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraph with <strong>keywords in bold</strong>]
+      </p>
+      <!-- Examples -->
+      <div style="margin-top: 12px; margin-bottom: 16px;">
+        <p style="font-weight: 600; margin-bottom: 8px;">Concrete examples:</p>
+        <p style="margin-bottom: 8px; padding-left: 16px;">9am to 12pm block: work on project X</p>
+        <p style="margin-bottom: 8px; padding-left: 16px;">2pm to 4pm block: meetings</p>
+      </div>
+    </div>
+    
+    <!-- Third Theme -->
+    <div class="theme-section" style="margin-bottom: 20px;">
+      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
+        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Third theme]
+      </h3>
+      <p style="margin-bottom: 16px; line-height: 1.6;">
+        [Paragraph with <strong>keywords in bold</strong>]
+      </p>
+      <!-- Reflection -->
+      <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 12px; margin-bottom: 16px; display: flex; align-items: flex-start;">
+        <span style="margin-right: 8px;">💭</span>
+        <p style="margin: 0; font-style: italic;"><strong>Reflection:</strong> [A relevant thought or advice]</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Additional Information Section -->
+  <div class="summary-section">
+    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+      <span style="margin-right: 8px;">🔗</span> Additional Information
+    </h2>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>Cited references</strong>: [Concise list]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>Recommended resources</strong>: [Concise list]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
+        <span style="position: absolute; left: 0;">•</span>
+        <strong>To go further</strong>: [Brief suggestion]
+      </li>
+    </ul>
+    <!-- Final Tip -->
+    <div style="background-color: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; align-items: flex-start;">
+      <span style="margin-right: 8px;">🔑</span>
+      <p style="margin: 0;"><strong>Final tip:</strong> [A practical advice]</p>
+    </div>
+  </div>
+</div>
+\`\`\`
 
-## 🔍 **In Brief**
+# SPECIFIC INSTRUCTIONS
+1. Use EXACTLY this HTML structure, replacing only the content in brackets.
+2. Do NOT modify the embedded CSS styles - they are essential for spacing.
+3. Keep the same hierarchy of titles and sections.
+4. Emojis must be kept as visual markers.
+5. Add all necessary key points and themes in the same structure.
+6. Maintain the styles defined as "margin-bottom" and "padding" to ensure spacing.
+7. Respect the original style attributes, do not simplify them.
 
-[2-3 impactful sentences maximum on the essence of the video]
-
-
-
----
-
-
-
-## 💡 **Key Takeaways**
-
-• **[First key concept]**: [Very concise explanation in one sentence]
-
-• **[Second key concept]**: [Very concise explanation in one sentence]
-
-• **[Third key concept]**: [Very concise explanation in one sentence]
-
-• **[Fourth key concept]**: [Very concise explanation in one sentence]
-
-
-
----
-
-
-
-## 📚 **Detailed Summary**
-
-
-### 🔹 **[First theme]**
-
-[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
-
-> **Quote or essential point highlighted**
-
-[Very short second paragraph if necessary]
-
-
-### 🔹 **[Second theme]**
-
-[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
-
-**Concrete examples:**
-1. [Short first example]
-2. [Short second example]
-
-
-### 🔹 **[Third theme]**
-
-[Short paragraph of 2-3 sentences maximum with **keywords in bold**]
-
-💭 *Reflection:* [A relevant thought or quote]
-
-
-
----
-
-
-
-## 🔗 **Additional Information**
-
-• **Cited references**: [Very concise list]
-
-• **Recommended resources**: [Very concise list]
-
-• **To go further**: [Brief suggestion]
-
-🔑 **Final tip**: [A practical tip to conclude]
-
-# ADDITIONAL STYLISTIC GUIDELINES
-- Create a document that breathes visually
-- Use short and simple sentences
-- Present information in an extremely scannable way
-- Ensure the document can be understood even when skimmed diagonally
-- Don't hesitate to use visual structures like mini-tables to compare information
+# CONTENT AND STYLE
+- Strictly limit the "In Brief" summary to 2-3 concise sentences.
+- "Key Takeaways" should be clear, each starting with a term in bold.
+- In the "Detailed Summary", create 2-4 main themes, each with a relevant title.
+- For each theme, provide a short paragraph of maximum 2-3 sentences.
+- Highlight key concepts by wrapping them in <strong></strong> tags.
+- Examples, quotes, and reflections are optional - include them only if relevant.
 
 # TRANSCRIPT
 ${transcription}
+
+# IMPORTANT
+Remember that you must generate HTML directly, not Markdown. This approach ensures that spacing and formatting will be preserved exactly as we want.
 `;
         }
-        // --- Fin de la Génération du Prompt Ultra-Aéré ---
         
         if (!process.env.GEMINI_API_KEY) {
             console.error('Erreur: Clé API Gemini (GEMINI_API_KEY) manquante dans .env');
@@ -438,7 +515,7 @@ ${transcription}
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.8,
-                maxOutputTokens: 6000
+                maxOutputTokens: 4000
             }
         };
         const geminiHeaders = {
@@ -456,31 +533,18 @@ ${transcription}
             const finishReason = candidate.finishReason;
             
             if (textContent && finishReason === 'STOP') {
-                // Post-traitement pour garantir l'espacement visuel
-                const enhancedMarkdown = textContent.trim()
-                    // Ajouter des espacements triple entre sections principales (##)
-                    .replace(/\n## /g, '\n\n\n\n## ')
-                    // Ajouter des espacements doubles entre sous-sections (###)
-                    .replace(/\n### /g, '\n\n\n### ')
-                    // Assurer que les séparateurs horizontaux ont de l'espace
-                    .replace(/\n---\n/g, '\n\n---\n\n')
-                    // Ajouter de l'espace avant chaque puce
-                    .replace(/\n• /g, '\n\n• ')
-                    // Ajouter un espace après les listes à puces
-                    .replace(/\n• (.*?)(?=\n[^•])/gs, '\n• $1\n')
-                    // Ajouter de l'espace avant les citations
-                    .replace(/\n>/g, '\n\n>')
-                    // Ajouter de l'espace après les citations
-                    .replace(/\n> (.*?)(?=\n[^>])/gs, '\n> $1\n\n')
-                    // Nettoyer les espaces excessifs
-                    .replace(/\n\n\n\n+/g, '\n\n\n\n')
-                    // Ajouter de l'espace avant les listes numérotées
-                    .replace(/\n\d+\./g, '\n\n$&')
-                    // Ajouter du caractère visuel avec des emojis si pas assez présents
-                    .replace(/## ([^🔍💡📚🔗])/g, '## 📌 $1');
+                // Extraire le HTML du contenu retourné (qui peut contenir les backticks et autres textes)
+                const htmlMatch = textContent.match(/```html\s*([\s\S]*?)\s*```/);
+                const htmlContent = htmlMatch ? htmlMatch[1].trim() : textContent.trim();
+                
+                // Nettoyer le HTML si nécessaire (enlever les commentaires, etc.)
+                const cleanedHtml = htmlContent
+                    .replace(/<!--[\s\S]*?-->/g, '') // Enlever les commentaires HTML
+                    .replace(/\s*\n\s*\n\s*/g, '\n') // Réduire les multiples sauts de ligne
+                    .trim();
                 
                 return res.json({
-                    summary: enhancedMarkdown
+                    summary: cleanedHtml
                 });
             } else {
                 const blockReason = response.data.promptFeedback?.blockReason || 'Inconnue';
@@ -496,21 +560,17 @@ ${transcription}
     } catch (error) {
         console.error('Erreur dans /api/summarize:', error.message || error);
         
-        // Déterminer le type d'erreur et renvoyer une réponse appropriée
         if (error.response) {
-            // Erreur de l'API Gemini
             return res.status(502).json({
                 error: "Erreur API externe",
                 message: error.response.data?.error?.message || "Échec de la requête à l'API externe"
             });
         } else if (error.request) {
-            // Erreur de réseau
             return res.status(503).json({
                 error: "Erreur réseau",
                 message: "Impossible de contacter l'API externe"
             });
         } else {
-            // Autre erreur
             return res.status(500).json({
                 error: "Erreur serveur",
                 message: error.message || "Une erreur inattendue s'est produite"
