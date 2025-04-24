@@ -203,35 +203,41 @@ app.post('/api/summarize', async (req, res) => {
         const { transcription, videoInfo, language = 'fr', isShorter = false } = req.body;
         
         if (!transcription || transcription.trim() === '') {
-            // Ajout d'une vérification pour une transcription vide
             return res.status(400).json({ error: 'Transcription requise et non vide' });
         }
         
-        // --- Génération du Prompt Amélioré ---
+        // --- Génération du Prompt Amélioré pour la Présentation ---
         let prompt = '';
         const videoTitle = videoInfo?.title ? `"${videoInfo.title}"` : 'Titre inconnu';
         const transcriptTypeText = isShorter ? (language === 'fr' ? 'Partielle (début seulement)' : 'Partial (beginning only)') : (language === 'fr' ? 'Complète' : 'Complete');
         
         if (language === 'fr') {
             prompt = `
-Tâche: Analyser et structurer un résumé de transcription vidéo YouTube.
+Tâche: Générer un résumé structuré et bien présenté d'une transcription vidéo YouTube.
 Vidéo: ${videoTitle}
 Type de Transcription: ${transcriptTypeText}
 
-Instructions (Format de sortie: Markdown):
+Instructions (Format de sortie: Markdown Standard):
 
 ## Résumé Détaillé
-Fournis un résumé complet et fidèle du contenu.
-${isShorter ? '**Note:** Indique clairement que ce résumé est basé sur une transcription partielle.' : ''}
+Fournis un résumé bien structuré utilisant des **paragraphes clairs et distincts (2-4 phrases par paragraphe environ)** pour améliorer la lisibilité. Assure une fluidité logique (ex: chronologique ou thématique).
+${isShorter ? '**Note Importante:** Ce résumé est basé sur une transcription PARTIELLE. Commence le résumé en indiquant clairement ce fait.' : ''}
 
 ## Points Clés
-Liste à puces (\`* point\`) des idées et enseignements principaux.
+Liste les principaux enseignements ou points clés sous forme de puces (\`* \`) concises et informatives. Chaque point doit être clair et facile à comprendre.
 
 ## Références (si applicable)
-Liste à puces (\`* point\`) des sources, références ou personnes mentionnées.
+Liste les sources, personnes ou références mentionnées sous forme de puces (\`* \`). Si aucune référence pertinente n'est trouvée dans la transcription, indique explicitement : \`* Aucune référence spécifique mentionnée.\`.
 
 ## Actions Recommandées (si applicable)
-Liste à puces (\`* point\`) des conseils pratiques ou actions suggérés.
+Liste les conseils pratiques ou actions suggérées sous forme de puces (\`* \`). Si aucune action spécifique n'est recommandée dans la transcription, indique explicitement : \`* Aucune action spécifique recommandée.\`.
+
+---
+Règles de Formatage Supplémentaires:
+- Utilise **exclusivement** les en-têtes Markdown \`##\` demandés ci-dessus.
+- Utilise \`* \` (astérisque suivi d'un espace) pour **toutes** les listes à puces.
+- Assure une bonne lisibilité avec des sauts de ligne clairs **entre les paragraphes** du résumé détaillé et **entre chaque section principale** (\`##\`).
+- Ne réponds *que* avec le contenu formaté en Markdown, en commençant par \`## Résumé Détaillé\`. N'ajoute aucune introduction ou conclusion en dehors de ce format.
 
 ---
 Transcription:
@@ -239,24 +245,31 @@ ${transcription}
 `;
         } else { // language 'en' or default
             prompt = `
-Task: Analyze and structure a summary of a YouTube video transcript.
+Task: Generate a structured and well-presented summary of a YouTube video transcript.
 Video: ${videoTitle}
 Transcript Type: ${transcriptTypeText}
 
-Instructions (Output Format: Markdown):
+Instructions (Output Format: Standard Markdown):
 
 ## Detailed Summary
-Provide a comprehensive and faithful summary of the content.
-${isShorter ? '**Note:** Clearly state this summary is based on a partial transcript.' : ''}
+Provide a well-structured summary using **clear, distinct paragraphs (approx. 2-4 sentences each)** to enhance readability. Ensure logical flow (e.g., chronological or thematic).
+${isShorter ? '**Important Note:** This summary is based on a PARTIAL transcript. Start the summary by clearly stating this.' : ''}
 
 ## Key Points
-Bulleted list (\`* point\`) of main ideas and takeaways.
+List the main takeaways or key points as concise, informative bullet points (\`* \`). Each point should be clear and easy to grasp.
 
 ## References (if applicable)
-Bulleted list (\`* point\`) of mentioned sources, references, or people.
+List mentioned sources, people, or references as bullet points (\`* \`). If no relevant references are found in the transcript, explicitly state: \`* No specific references mentioned.\`.
 
 ## Recommended Actions (if applicable)
-Bulleted list (\`* point\`) of practical advice or suggested actions.
+List practical advice or suggested actions as bullet points (\`* \`). If no specific actions are recommended in the transcript, explicitly state: \`* No specific actions recommended.\`.
+
+---
+Additional Formatting Rules:
+- Use **only** the Markdown \`##\` headers requested above.
+- Use \`* \` (asterisk followed by a space) for **all** bullet points.
+- Ensure good readability with clear line breaks **between paragraphs** in the detailed summary and **between each main section** (\`##\`).
+- Respond *only* with the Markdown formatted content, starting with \`## Detailed Summary\`. Do not add any introduction or conclusion outside this format.
 
 ---
 Transcript:
@@ -265,87 +278,88 @@ ${transcription}
         }
         // --- Fin de la Génération du Prompt Amélioré ---
         
-        // Validation simple de la clé API (pour le débogage)
         if (!process.env.GEMINI_API_KEY) {
             console.error('Erreur: Clé API Gemini (GEMINI_API_KEY) manquante dans .env');
             return res.status(500).json({ error: 'Configuration serveur incomplète (Clé API manquante)' });
         }
         
-        // Requête à l'API Gemini
-        const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'; // Utilisation de Flash pour potentiellement plus de rapidité/moins de coût
+        const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
         const geminiPayload = {
             contents: [{
                 parts: [{
                     text: prompt
                 }]
             }],
-            // Optionnel: Ajouter des configurations de génération si nécessaire
-            // generationConfig: {
-            //   temperature: 0.7,
-            //   // ... autres paramètres
-            // }
+            // Ajout potentiel de paramètres pour contrôler la sortie (optionnel)
+            generationConfig: {
+                // temperature: 0.6, // Légèrement moins créatif, plus factuel
+                // responseMimeType: "text/plain" // Assurer une sortie texte pur (Markdown est du texte)
+            },
+            // safetySettings: [] // Définir les niveaux de sécurité si nécessaire
         };
         const geminiHeaders = {
             'Content-Type': 'application/json',
             'x-goog-api-key': process.env.GEMINI_API_KEY
         };
         
-        console.log("Envoi de la requête à Gemini avec prompt:", prompt.substring(0, 200) + "..."); // Log tronqué pour la lisibilité
+        // console.log("Envoi de la requête à Gemini avec prompt amélioré (début):", prompt.substring(0, 300) + "...");
         
         const response = await axios.post(geminiUrl, geminiPayload, { headers: geminiHeaders });
         
-        // Transformation de la réponse pour la rendre compatible avec le client
         let responseData;
+        let responseStatus = 200; // Statut par défaut
         
         try {
-            // Extraire le texte du résumé de la structure Gemini attendue
-            // Le texte retourné DOIT contenir le Markdown structuré demandé dans le prompt
             const candidate = response.data?.candidates?.[0];
             const textContent = candidate?.content?.parts?.[0]?.text;
+            const finishReason = candidate?.finishReason;
+            const safetyRatings = candidate?.safetyRatings; // Récupérer les safety ratings
             
-            if (textContent) {
-                // Le client s'attend à recevoir le Markdown complet dans le champ 'summary'
+            if (textContent && finishReason === 'STOP') { // Vérifier aussi finishReason
                 responseData = {
-                    summary: textContent.trim(), // Nettoyer les espaces blancs potentiels
-                    // Conserver les informations de feedback si disponibles et utiles
-                    promptFeedback: candidate?.promptFeedback,
-                    finishReason: candidate?.finishReason
+                    summary: textContent.trim(),
+                    // Inclure des métadonnées utiles si nécessaire
+                    _meta: {
+                        finishReason: finishReason,
+                        safetyRatings: safetyRatings
+                    }
                 };
-                console.log("Résumé généré avec succès (début):", responseData.summary.substring(0, 150) + "...");
+                
             } else {
-                // Si la structure ou le contenu n'est pas celui attendu
-                console.error("Structure de réponse Gemini inattendue ou contenu textuel manquant:", JSON.stringify(response.data, null, 2));
-                // Essayer de fournir plus de détails sur l'erreur si possible (ex: finishReason)
-                const finishReason = candidate?.finishReason || response.data?.promptFeedback?.blockReason;
-                const blockMessage = response.data?.promptFeedback?.blockReasonMessage;
+                // Gérer les cas où la génération est bloquée ou incomplète
+                const blockReason = response.data?.promptFeedback?.blockReason || 'Inconnue';
+                const blockMessage = response.data?.promptFeedback?.blockReasonMessage || '';
+                const defaultMessage = `Génération de contenu échouée ou incomplète. Raison: ${finishReason || blockReason} ${blockMessage ? `(${blockMessage})` : ''}`;
+                
+                console.error("Erreur ou réponse inattendue de Gemini:", defaultMessage, JSON.stringify(response.data, null, 2));
+                
                 responseData = {
-                    error: `Structure de réponse de l'API inattendue ou contenu manquant. Raison: ${finishReason || 'Inconnue'} ${blockMessage ? `(${blockMessage})` : ''}`,
-                    _raw: response.data // Fournir les données brutes pour le débogage
+                    error: `Erreur lors de la génération du résumé: ${defaultMessage}`,
+                    _raw: response.data
                 };
-                // Retourner un statut d'erreur approprié si la réponse de l'API indique un problème
-                res.status(502); // Bad Gateway - indique un problème avec la réponse de l'API externe
+                // Si bloqué pour sécurité, ou autre raison API, utiliser 502. Sinon 500.
+                responseStatus = (finishReason === 'SAFETY' || finishReason === 'RECITATION' || blockReason !== 'Inconnue') ? 502 : 500;
             }
         } catch (parseError) {
-            console.error("Erreur lors de l'extraction/traitement du résumé:", parseError);
+            console.error("Erreur lors du traitement de la réponse Gemini:", parseError);
             responseData = {
-                error: "Impossible d'extraire ou traiter le résumé de la réponse de l'API",
-                _raw: response.data // Fournir les données brutes pour le débogage
+                error: "Impossible de traiter la réponse de l'API de génération",
+                _raw: response.data
             };
-            res.status(500); // Erreur interne du serveur
+            responseStatus = 500; // Erreur interne du serveur
         }
         
-        // Renvoyer la réponse (éventuellement avec un statut d'erreur défini ci-dessus)
-        res.json(responseData);
+        // Renvoyer la réponse avec le statut approprié
+        res.status(responseStatus).json(responseData);
         
     } catch (error) {
-        console.error('Erreur lors de la génération du résumé (catch global):', error.response?.data || error.message);
-        // Fournir une erreur plus spécifique si elle provient d'axios/Gemini
+        console.error('Erreur globale dans /api/summarize:', error.response?.data || error.message);
         const status = error.response?.status || 500;
         const message = error.response?.data?.error?.message || error.message || 'Erreur serveur inconnue';
         res.status(status).json({
-            error: 'Erreur serveur lors de l\'appel à l\'API de génération',
+            error: 'Erreur serveur lors de la tentative de génération du résumé',
             message: message,
-            details: error.response?.data // Inclure les détails de l'erreur API si disponibles
+            details: error.response?.data
         });
     }
 });
