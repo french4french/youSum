@@ -738,6 +738,31 @@ document.addEventListener('DOMContentLoaded', function() {
      * Uses initial page language for PDF labels and status messages.
      * Version finale avec nettoyage complet des caractères spéciaux et meilleure mise en page.
      */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version améliorée pour conserver la mise en forme HTML et le contenu exact du résumé.
+     */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version améliorée pour conserver la mise en forme HTML et le contenu exact du résumé.
+     */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version hybride utilisant html2canvas pour la capture fidèle
+     * et un traitement manuel pour assurer une répartition correcte sur les pages.
+     */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version avec contrôle manuel strict de la pagination pour garantir que tout le contenu s'affiche correctement.
+     */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version spécialement conçue pour gérer correctement les balises HTML et emojis.
+     */
+    /**
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version corrigée pour gérer correctement les émojis et caractères spéciaux.
+     */
     function downloadSummary() {
         const noSummaryDownloadText = getText('noSummaryToDownload', 'No summary to download.');
         const preparingPDFText = getText('preparingPDF', 'Preparing PDF...');
@@ -828,18 +853,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // ===== UTILITY FUNCTIONS =====
                 
-                // Simple text cleaning - focuses on common problematic characters for jsPDF
+                // Amélioré: remplace les émojis par des alternatives textuelles et nettoie les caractères problématiques
                 function cleanText(text) {
                     if (!text) return '';
-                    // Replace specific problematic chars, keep most accents
-                    let cleaned = text.replace(/•/g, '-') // Replace bullet points
-                        .replace(/[“”]/g, '"') // Smart quotes to standard
-                        .replace(/[‘’]/g, "'") // Smart quotes to standard
-                        .replace(/…/g, '...'); // Ellipsis
-                    // Attempt to remove control characters except newline/tab/carriage return
+                    
+                    // Map des émojis courants vers des alternatives textuelles
+                    const emojiMap = {
+                        '✨': '[*]',        // Sparkles
+                        '🔍': '[Loupe]',    // Magnifying Glass
+                        '💡': '[Idée]',     // Light Bulb
+                        '📋': '[Liste]',    // Clipboard
+                        '🔹': '[>]',        // Blue Diamond
+                        '📊': '[Graphique]',// Chart
+                        '💼': '[Travail]',  // Briefcase
+                        '🔗': '[Lien]',     // Link
+                        '🔑': '[Clé]',      // Key
+                        '⚠️': '[Attention]' // Warning
+                    };
+                    
+                    // Remplace les émojis par leur alternative textuelle
+                    let cleaned = text;
+                    Object.keys(emojiMap).forEach(emoji => {
+                        cleaned = cleaned.replace(new RegExp(emoji, 'g'), emojiMap[emoji]);
+                    });
+                    
+                    // Nettoie d'autres caractères problématiques
+                    cleaned = cleaned
+                        .replace(/•/g, '-') // Replace bullet points with hyphen
+                        .replace(/[""]/g, '"') // Smart quotes to standard quotes
+                        .replace(/['']/g, "'") // Smart apostrophes to standard apostrophes
+                        .replace(/…/g, '...') // Ellipsis to three dots
+                        .replace(/–/g, '-') // En dash to hyphen
+                        .replace(/—/g, '-') // Em dash to hyphen
+                        .replace(/[^\x00-\x7F]/g, char => {
+                            // Essaie de translittérer les caractères non-ASCII courants
+                            const translitMap = {
+                                'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+                                'à': 'a', 'â': 'a', 'ä': 'a',
+                                'î': 'i', 'ï': 'i',
+                                'ô': 'o', 'ö': 'o',
+                                'ù': 'u', 'û': 'u', 'ü': 'u',
+                                'ç': 'c',
+                                'ñ': 'n',
+                                // Ajouter d'autres mappings au besoin
+                            };
+                            return translitMap[char] || ' '; // Remplace par un espace si pas de mapping
+                        });
+                    
+                    // Nettoie les caractères de contrôle
                     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-                    // Replace multiple spaces with single space
+                    
+                    // Réduit les espaces multiples
                     cleaned = cleaned.replace(/\s{2,}/g, ' ');
+                    
                     return cleaned.trim();
                 }
                 
@@ -868,19 +934,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     tempDiv.innerHTML = currentSummary;
                     const content = [];
                     
-                    tempDiv.childNodes.forEach(node => {
+                    // Fonction récursive pour traiter les nœuds
+                    function processNode(node) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             const tagName = node.tagName.toLowerCase();
-                            const text = cleanText(node.textContent || '');
-                            if (!text) return; // Skip empty elements
                             
+                            // Traitement spécial pour les éléments div et span contenant des emojis
+                            if ((tagName === 'div' || tagName === 'span') && node.querySelector('emoji')) {
+                                // Traiter les emojis spécialement si nécessaire
+                            }
+                            
+                            // Traitement standard des éléments
                             if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-                                content.push({ type: 'h', level: parseInt(tagName.substring(1)), text: text });
+                                const text = cleanText(node.textContent || '');
+                                if (text) {
+                                    content.push({ type: 'h', level: parseInt(tagName.substring(1)), text: text });
+                                }
                             } else if (tagName === 'p') {
-                                content.push({ type: 'p', text: text });
+                                const text = cleanText(node.textContent || '');
+                                if (text) {
+                                    content.push({ type: 'p', text: text });
+                                }
                             } else if (tagName === 'ul' || tagName === 'ol') {
                                 const listType = tagName;
-                                node.querySelectorAll('li').forEach((li, index) => {
+                                Array.from(node.querySelectorAll('li')).forEach((li, index) => {
                                     const liText = cleanText(li.textContent || '');
                                     if (liText) {
                                         content.push({
@@ -892,16 +969,26 @@ document.addEventListener('DOMContentLoaded', function() {
                                     }
                                 });
                             } else if (tagName === 'blockquote') {
-                                content.push({ type: 'blockquote', text: text });
+                                const text = cleanText(node.textContent || '');
+                                if (text) {
+                                    content.push({ type: 'blockquote', text: text });
+                                }
                             } else if (tagName === 'hr') {
                                 content.push({ type: 'hr' });
-                            } // Could add <pre>, <code> handling if needed
+                            } else {
+                                // Parcourir les enfants pour les autres éléments
+                                Array.from(node.childNodes).forEach(child => processNode(child));
+                            }
                         } else if (node.nodeType === Node.TEXT_NODE) {
                             // Handle potential loose text nodes if markdown parser leaves them
                             const text = cleanText(node.textContent || '');
                             if (text) content.push({ type: 'p', text: text });
                         }
-                    });
+                    }
+                    
+                    // Traiter chaque nœud enfant du div racine
+                    Array.from(tempDiv.childNodes).forEach(node => processNode(node));
+                    
                     return content;
                 }
                 
