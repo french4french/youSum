@@ -153,6 +153,7 @@
                     <img alt="YouSummarize Logo"
                          width="200" height="60"
                          src="./assets/images/logo.webp"
+                         title="YouSummarize Logo"
                     />
                 </a>
             </div>
@@ -261,7 +262,7 @@
                             <select id="language" class="px-3 py-1.5 text-sm border border-subtle rounded-md focus:ring-accent/50 focus:border-accent text-main bg-white text-xs">
                                 <option value="fr" selected>Français</option>
                                 <option value="en" lang="en">English</option>
-                                <option value="es" lang="es">Español</option>
+                                <!--<option value="es" lang="es">Español</option>-->
                             </select>
                         </div>
                     </div>
@@ -303,7 +304,7 @@
                     <div class="flex flex-col md:flex-row gap-5">
                         <div class="thumbnail-container md:w-1/4 flex-shrink-0 relative rounded-md overflow-hidden border border-subtle/50">
                             <!-- Miniature avec dimensions (le src est dynamique) -->
-                            <img id="videoThumbnail" src="" alt="Miniature Vidéo"
+                            <img id="videoThumbnail" src="" alt="Miniature Vidéo" title="Miniature Vidéo"
                                  width="480" height="270"
                                  class="w-full h-auto object-cover aspect-video block">
                             <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300">
@@ -329,14 +330,14 @@
                 <div id="results" class="bg-card p-6 sm:p-8 rounded-lg shadow-md hidden border border-subtle">
                     <div class="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center mb-4 gap-4">
                         <h2 class="text-xl md:text-2xl font-semibold text-main font-serif">Résumé Généré</h2>
-                        <div class="summary-length flex items-center gap-2 flex-shrink-0">
+<!--                        <div class="summary-length flex items-center gap-2 flex-shrink-0">
                             <span class="text-xs text-subtle mr-1">Précision:</span>
                             <div class="btn-group flex border border-subtle rounded-md overflow-hidden shadow-sm">
                                 <button class="btn-option px-3 py-1 text-xs border-r border-subtle focus:outline-none transition duration-150 hover:bg-[#f0eee6] bg-white text-subtle" data-length="short">Court</button>
                                 <button class="btn-option px-3 py-1 text-xs border-r border-subtle focus:outline-none transition duration-150 hover:bg-[#f0eee6] active bg-[#E9E5D8] text-main font-medium" data-length="medium">Moyen</button>
                                 <button class="btn-option px-3 py-1 text-xs focus:outline-none transition duration-150 hover:bg-[#f0eee6] bg-white text-subtle" data-length="long">Détaillé</button>
                             </div>
-                        </div>
+                        </div>-->
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 mb-4">
@@ -410,7 +411,7 @@
                             <svg class="chevron w-4 h-4 text-subtle shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </summary>
                         <p class="mt-2 text-subtle leading-relaxed text-sm pl-1">
-                            Actuellement, vous pouvez générer des résumés en Français, Anglais et Espagnol. D'autres langues sont prévues.
+                            Actuellement, vous pouvez générer des résumés en Français et Anglais. D'autres langues sont prévues.
                         </p>
                     </details>
                     <details class="faq-card group border-b border-subtle pb-4">
@@ -434,7 +435,7 @@
                     </p>
                     <div class="cta-actions flex flex-col sm:flex-row gap-4 justify-center">
                         <a href="#form-section" class="bg-accent hover:opacity-90 text-white font-semibold px-7 py-3 rounded-lg transition duration-200 shadow-lg hover:shadow-md">
-                            Essayer YouSummarize (Gratuit)
+                            Essayer Youtube Summarize (Gratuit)
                         </a>
                     </div>
                     <p class="mt-3 text-xs text-subtle">Aucune inscription requise</p>
@@ -443,7 +444,7 @@
 
             <!-- Optional Newsletter -->
             <div class="newsletter pt-8 pb-6 my-12 lg:my-16 w-full max-w-2xl mx-auto text-center border-t border-subtle/30">
-                <h3 class="font-serif text-2xl font-semibold text-main mb-2">Restez informé</h3>
+                <h3 class="font-serif text-2xl font-semibold text-main mb-2">Rester informé</h3>
                 <p class="newsletter-description text-subtle text-sm mb-4">Nouveautés et astuces occasionnelles.</p>
                 <form class="newsletter-form flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
                     <input type="email" placeholder="votre.email@exemple.com" aria-label="Adresse e-mail pour la newsletter" class="newsletter-input flex-grow px-4 py-2 border border-subtle rounded-md focus:ring-1 focus:ring-accent/50 focus:border-accent focus:outline-none text-sm bg-white shadow-inner" required>
