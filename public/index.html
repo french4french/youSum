@@ -14,17 +14,17 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://yousummarize.example.com/"> <!-- !! REMPLACER PAR VOTRE URL !! -->
+    <meta property="og:url" content="https://yousummarize.example.com/">
     <meta property="og:title" content="YouSummarize - Résumé de vidéos YouTube avec IA">
     <meta property="og:description" content="Résumez n'importe quelle vidéo YouTube en quelques secondes grâce à l'IA. Économisez du temps avec des résumés clairs et structurés.">
-    <meta property="og:image" content="https://yousummarize.example.com/assets/images/og-image.jpg"> <!-- !! REMPLACER PAR L'URL DE VOTRE IMAGE OG !! -->
+    <meta property="og:image" content="https://yousummarize.example.com/assets/images/og-image.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://yousummarize.example.com/"> <!-- !! REMPLACER PAR VOTRE URL !! -->
+    <meta property="twitter:url" content="https://yousummarize.example.com/">
     <meta property="twitter:title" content="YouSummarize - Résumé de vidéos YouTube avec IA">
     <meta property="twitter:description" content="Résumez n'importe quelle vidéo YouTube en quelques secondes grâce à l'IA. Économisez du temps avec des résumés clairs et structurés.">
-    <meta property="twitter:image" content="https://yousummarize.example.com/assets/images/og-image.jpg"> <!-- !! REMPLACER PAR L'URL DE VOTRE IMAGE OG !! -->
+    <meta property="twitter:image" content="https://yousummarize.example.com/assets/images/og-image.jpg">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -475,6 +475,10 @@
     <span id="toastMessage"></span>
 </div>
 
+<div id="copyToast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 z-50">
+    Lien copié dans le presse-papiers !
+</div>
+
 <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -487,16 +491,11 @@
             });
             button.classList.add('active', 'bg-[#E9E5D8]', 'text-main', 'font-medium');
             button.classList.remove('bg-white', 'text-subtle');
-            // Trigger summary update logic here...
             const selectedLength = button.dataset.length;
             console.log("Selected length:", selectedLength);
-            // Vous devrez appeler votre fonction de mise à jour du résumé ici
-            // en passant `selectedLength` ou l'état actuel de l'URL
-            // updateSummaryDisplay(currentVideoId, selectedLength);
         });
     });
 </script>
-<!-- Assurez-vous que ce script est chargé après le reste du DOM et après l'initialisation de variables/fonctions nécessaires -->
 <script src="js/app.js"></script>
 
 </body>
