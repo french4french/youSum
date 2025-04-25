@@ -206,7 +206,7 @@ app.post('/api/summarize', async (req, res) => {
             return res.status(400).json({ error: 'Transcription requise' });
         }
         
-        // --- Génération du Prompt pour HTML directement formaté ---
+        // --- Génération du Prompt pour HTML avec emojis et espacement optimal ---
         let prompt = '';
         const videoTitle = videoInfo && videoInfo.title ? `"${videoInfo.title}"` : 'Titre inconnu';
         const channelName = videoInfo && videoInfo.channelTitle ? `${videoInfo.channelTitle}` : 'Chaîne inconnue';
@@ -216,287 +216,367 @@ app.post('/api/summarize', async (req, res) => {
         
         if (language === 'fr') {
             prompt = `
-# CONSIGNE ABSOLUE
-Tu dois générer un résumé en HTML directement formaté avec des styles intégrés pour garantir un espacement optimal. N'utilise PAS de Markdown standard mais du HTML complet.
+# INSTRUCTIONS PRINCIPALES
+Ta mission est de créer un résumé informatif, visuellement structuré et agréable à lire d'une vidéo YouTube. Ce résumé doit extraire l'ESSENCE de la vidéo et toutes les INFORMATIONS CLÉS, tout en étant facile à parcourir.
 
 # INFORMATIONS SUR LA VIDÉO
 - Titre: ${videoTitle}
 - Chaîne: ${channelName}
 - Type de transcription: ${transcriptTypeText}
 
-# FORMAT HTML EXIGÉ
-Utilise cette structure HTML avec des styles intégrés:
+# FORMAT ET STRUCTURE EXIGÉS
+Tu dois suivre ce format HTML avec des styles intégrés pour garantir une lisibilité optimale:
 
 \`\`\`html
-<div class="summary-container">
-  <!-- En Bref Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">🔍</span> En Bref
-    </h2>
-    <p style="margin-bottom: 16px; line-height: 1.6;">
-      [2-3 phrases sur l'essence de la vidéo]
+<div class="summary-container" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <!-- TITRE PRINCIPAL -->
+  <h2 style="font-size: 1.8rem; margin-bottom: 18px; font-weight: 700; color: #111; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+    ✨ [Titre résumant parfaitement le sujet principal de la vidéo]
+  </h2>
+
+  <!-- SECTION APERÇU RAPIDE -->
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4f46e5;">
+    <p style="font-size: 1rem; margin-bottom: 0; line-height: 1.5;">
+      <span style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">🔍 Aperçu Rapide</span>
+      [2-3 phrases concises qui capturent parfaitement l'essence de la vidéo - présenter l'objectif principal et les points clés]
     </p>
   </div>
-  
-  <!-- Points Essentiels Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">💡</span> Points Essentiels
-    </h2>
-    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>[Premier concept]</strong>: [Explication en UNE phrase]
+
+  <!-- SECTION POINTS CLÉS -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
+      <span style="margin-right: 8px;">💡</span> Points Clés
+    </h3>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 10px;">
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Point clé 1]:</strong> [Explication claire et concise]
       </li>
-      <!-- Répéter pour chaque point essentiel -->
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Point clé 2]:</strong> [Explication claire et concise]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Point clé 3]:</strong> [Explication claire et concise]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Point clé 4]:</strong> [Explication claire et concise]
+      </li>
     </ul>
   </div>
-  
-  <!-- Résumé Détaillé Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">📚</span> Résumé Détaillé
-    </h2>
+
+  <!-- SECTION CONTENU DÉTAILLÉ -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
+      <span style="margin-right: 8px;">📋</span> Contenu Détaillé
+    </h3>
     
-    <!-- Premier Thème -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Premier thème]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraphe avec <strong>mots-clés en gras</strong>]
+    <!-- PREMIÈRE SECTION THÉMATIQUE -->
+    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Titre de la première section thématique]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraphe détaillant cette section avec <strong style="font-weight: 600;">points importants en gras</strong>. S'assurer que ce paragraphe est informatif et apporte de la valeur.]
       </p>
-      <!-- Citation ou élément supplémentaire si pertinent -->
-      <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 16px; margin: 16px 0; font-style: italic;">
-        [Citation ou phrase d'impact si pertinente]
-      </blockquote>
-    </div>
-    
-    <!-- Deuxième Thème -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Deuxième thème]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraphe avec <strong>mots-clés en gras</strong>]
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Second paragraphe si nécessaire avec d'autres informations importantes.]
       </p>
-      <!-- Exemples -->
-      <div style="margin-top: 12px; margin-bottom: 16px;">
-        <p style="font-weight: 600; margin-bottom: 8px;">Exemples concrets:</p>
-        <p style="margin-bottom: 8px; padding-left: 16px;">Bloc de 9h à 12h: travail sur projet X</p>
-        <p style="margin-bottom: 8px; padding-left: 16px;">Bloc de 14h à 16h: réunions</p>
+      
+      <!-- ENCART POUR DONNÉES/EXEMPLES SI PERTINENT -->
+      <div style="background-color: #f0f4f8; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.95rem;">
+        <p style="margin: 0 0 8px 0; font-weight: 600;">📊 Chiffres & Données:</p>
+        <ul style="margin: 0; padding-left: 20px; list-style-type: disc;">
+          <li style="margin-bottom: 6px;">[Donnée/chiffre spécifique 1]</li>
+          <li style="margin-bottom: 6px;">[Donnée/chiffre spécifique 2]</li>
+          <li style="margin-bottom: 0;">[Donnée/chiffre spécifique 3]</li>
+        </ul>
       </div>
     </div>
     
-    <!-- Troisième Thème -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Troisième thème]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraphe avec <strong>mots-clés en gras</strong>]
+    <!-- DEUXIÈME SECTION THÉMATIQUE -->
+    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Titre de la deuxième section thématique]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraphe détaillant cette section avec <strong style="font-weight: 600;">points importants en gras</strong>.]
       </p>
-      <!-- Réflexion -->
-      <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 12px; margin-bottom: 16px; display: flex; align-items: flex-start;">
-        <span style="margin-right: 8px;">💭</span>
-        <p style="margin: 0; font-style: italic;"><strong>Réflexion:</strong> [Une pensée ou conseil pertinent]</p>
+      
+      <!-- ENCART EXEMPLE -->
+      <div style="background-color: #fff8c5; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.95rem;">
+        <p style="margin: 0 0 8px 0; font-weight: 600;">💼 Exemple Concret:</p>
+        <p style="margin: 0;">[Description d'un exemple mentionné dans la vidéo]</p>
+      </div>
+    </div>
+    
+    <!-- TROISIÈME SECTION THÉMATIQUE -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Titre de la troisième section thématique]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraphe détaillant cette section avec <strong style="font-weight: 600;">points importants en gras</strong>.]
+      </p>
+      
+      <!-- ENCART CONSEIL/ASTUCE -->
+      <div style="background-color: #e6f7ff; padding: 12px; border-radius: 8px; margin: 15px 0; display: flex; align-items: flex-start; font-size: 0.95rem;">
+        <span style="margin-right: 8px; font-size: 1.2rem;">💡</span>
+        <div>
+          <p style="margin: 0 0 5px 0; font-weight: 600;">Astuce importante:</p>
+          <p style="margin: 0;">[Conseil ou astuce mentionné dans la vidéo]</p>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- Informations Complémentaires Section -->
-  <div class="summary-section">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+  <!-- SECTION INFORMATIONS COMPLÉMENTAIRES -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
       <span style="margin-right: 8px;">🔗</span> Informations Complémentaires
-    </h2>
-    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>Références citées</strong>: [Liste concise]
+    </h3>
+    <ul style="list-style-type: none; padding-left: 0;">
+      <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">Références citées:</strong> [Sources, personnes ou documents mentionnés]
       </li>
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>Ressources recommandées</strong>: [Liste concise]
-      </li>
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>Pour aller plus loin</strong>: [Suggestion brève]
+      <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">Pour aller plus loin:</strong> [Suggestions pour approfondir le sujet]
       </li>
     </ul>
-    <!-- Conseil final -->
-    <div style="background-color: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; align-items: flex-start;">
-      <span style="margin-right: 8px;">🔑</span>
-      <p style="margin: 0;"><strong>Conseil final:</strong> [Un conseil pratique]</p>
-    </div>
+  </div>
+  
+  <!-- SECTION CONCLUSION -->
+  <div style="background-color: #f0f9ff; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #0ea5e9;">
+    <p style="margin: 0;">
+      <span style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">🔑 L'essentiel à retenir</span>
+      [1-2 phrases résumant les points clés et l'enseignement principal de la vidéo]
+    </p>
   </div>
 </div>
 \`\`\`
 
-# INSTRUCTIONS SPÉCIFIQUES
-1. Utilise EXACTEMENT cette structure HTML, en remplaçant uniquement le contenu entre crochets.
-2. Ne modifie PAS les styles CSS intégrés - ils sont essentiels pour l'espacement.
-3. Garde la même hiérarchie des titres et des sections.
-4. Les emojis doivent être conservés comme marqueurs visuels.
-5. Ajoute tous les points essentiels et thèmes nécessaires dans la même structure.
-6. Maintiens les styles définis comme "margin-bottom" et "padding" pour garantir l'espacement.
-7. Respecte les attributs style originaux, ne les simplifie pas.
+# DIRECTIVES DE CONTENU IMPORTANTES
 
-# CONTENU ET STYLE
-- Limite strictement le résumé "En Bref" à 2-3 phrases concises.
-- Les "Points Essentiels" doivent être clairs, commençant chacun par un terme en gras.
-- Dans le "Résumé Détaillé", crée 2-4 thèmes principaux, chacun avec un titre pertinent.
-- Pour chaque thème, fournis un paragraphe court de 2-3 phrases maximum.
-- Mets en évidence les concepts clés en les encadrant de balises <strong></strong>.
-- Les exemples, citations et réflexions sont optionnels - inclus-les seulement s'ils sont pertinents.
+1. **EXTRACTION INTELLIGENTE** - Tu dois identifier et extraire:
+   - Le sujet/thème EXACT de la vidéo
+   - Les informations factuelles précises (chiffres, dates, données)
+   - Les exemples concrets mentionnés
+   - Les conseils/astuces pratiques fournis
+   - Les concepts clés expliqués
+
+2. **ORGANISATION THÉMATIQUE** - Structure les informations par thèmes cohérents:
+   - Adapte les titres de section pour qu'ils reflètent précisément le contenu
+   - Organise l'information de manière logique (du général au spécifique)
+   - Regroupe les éléments similaires dans des sections dédiées
+   - Assure-toi que chaque section apporte une valeur unique
+
+3. **PRÉSENTATION VISUELLE** - Utilise les éléments visuels à bon escient:
+   - Choisis des emojis pertinents pour chaque section/concept
+   - Utilise les encarts colorés pour mettre en valeur des informations spéciales
+   - Mets en gras les termes et concepts importants
+   - Utilise les listes à puces pour les énumérations
+
+4. **VALEUR AJOUTÉE** - Assure-toi que ton résumé:
+   - Capture l'ESSENCE de la vidéo dans l'aperçu rapide
+   - Présente clairement les informations les plus précieuses
+   - Rend le contenu plus accessible et digeste
+   - Facilite la compréhension des concepts complexes
 
 # TRANSCRIPTION
 ${transcription}
 
 # IMPORTANT
-N'oublie pas que tu dois générer le HTML directement, pas du Markdown. Cette approche garantit que l'espacement et la mise en forme seront préservés exactement comme nous le souhaitons.
+- Ce résumé doit pouvoir être compris SANS avoir vu la vidéo
+- Concentre-toi sur les INFORMATIONS CONCRÈTES plutôt que sur les opinions
+- Ne génère que le code HTML, sans explications avant ou après
+- Vérifie que ton code HTML est valide et correctement formaté
+- Assure-toi que le résumé couvre TOUS les points importants de la vidéo
 `;
         } else { // language 'en' or default
             prompt = `
-# ABSOLUTE DIRECTIVE
-You must generate a summary in directly formatted HTML with integrated styles to guarantee optimal spacing. Do NOT use standard Markdown but complete HTML.
+# MAIN INSTRUCTIONS
+Your mission is to create an informative, visually structured, and pleasant-to-read summary of a YouTube video. This summary must extract the ESSENCE of the video and all KEY INFORMATION, while being easy to browse.
 
 # VIDEO INFORMATION
 - Title: ${videoTitle}
 - Channel: ${channelName}
 - Transcript type: ${transcriptTypeText}
 
-# REQUIRED HTML FORMAT
-Use this HTML structure with integrated styles:
+# REQUIRED FORMAT AND STRUCTURE
+You must follow this HTML format with integrated styles to ensure optimal readability:
 
 \`\`\`html
-<div class="summary-container">
-  <!-- In Brief Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">🔍</span> In Brief
-    </h2>
-    <p style="margin-bottom: 16px; line-height: 1.6;">
-      [2-3 sentences on the essence of the video]
+<div class="summary-container" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <!-- MAIN TITLE -->
+  <h2 style="font-size: 1.8rem; margin-bottom: 18px; font-weight: 700; color: #111; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+    ✨ [Title perfectly summarizing the main topic of the video]
+  </h2>
+
+  <!-- QUICK OVERVIEW SECTION -->
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4f46e5;">
+    <p style="font-size: 1rem; margin-bottom: 0; line-height: 1.5;">
+      <span style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">🔍 Quick Overview</span>
+      [2-3 concise sentences that perfectly capture the essence of the video - present the main objective and key points]
     </p>
   </div>
-  
-  <!-- Key Takeaways Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">💡</span> Key Takeaways
-    </h2>
-    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>[First concept]</strong>: [Explanation in ONE sentence]
+
+  <!-- KEY POINTS SECTION -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
+      <span style="margin-right: 8px;">💡</span> Key Points
+    </h3>
+    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 10px;">
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Key point 1]:</strong> [Clear and concise explanation]
       </li>
-      <!-- Repeat for each key point -->
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Key point 2]:</strong> [Clear and concise explanation]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Key point 3]:</strong> [Clear and concise explanation]
+      </li>
+      <li style="margin-bottom: 12px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">[Key point 4]:</strong> [Clear and concise explanation]
+      </li>
     </ul>
   </div>
-  
-  <!-- Detailed Summary Section -->
-  <div class="summary-section" style="margin-bottom: 24px;">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
-      <span style="margin-right: 8px;">📚</span> Detailed Summary
-    </h2>
+
+  <!-- DETAILED CONTENT SECTION -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
+      <span style="margin-right: 8px;">📋</span> Detailed Content
+    </h3>
     
-    <!-- First Theme -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [First theme]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraph with <strong>keywords in bold</strong>]
+    <!-- FIRST THEMATIC SECTION -->
+    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Title of the first thematic section]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraph detailing this section with <strong style="font-weight: 600;">important points in bold</strong>. Ensure that this paragraph is informative and adds value.]
       </p>
-      <!-- Quote or additional element if relevant -->
-      <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 16px; margin: 16px 0; font-style: italic;">
-        [Quote or impactful sentence if relevant]
-      </blockquote>
-    </div>
-    
-    <!-- Second Theme -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Second theme]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraph with <strong>keywords in bold</strong>]
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Second paragraph if necessary with other important information.]
       </p>
-      <!-- Examples -->
-      <div style="margin-top: 12px; margin-bottom: 16px;">
-        <p style="font-weight: 600; margin-bottom: 8px;">Concrete examples:</p>
-        <p style="margin-bottom: 8px; padding-left: 16px;">9am to 12pm block: work on project X</p>
-        <p style="margin-bottom: 8px; padding-left: 16px;">2pm to 4pm block: meetings</p>
+      
+      <!-- DATA/EXAMPLES BOX IF RELEVANT -->
+      <div style="background-color: #f0f4f8; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.95rem;">
+        <p style="margin: 0 0 8px 0; font-weight: 600;">📊 Figures & Data:</p>
+        <ul style="margin: 0; padding-left: 20px; list-style-type: disc;">
+          <li style="margin-bottom: 6px;">[Specific data/figure 1]</li>
+          <li style="margin-bottom: 6px;">[Specific data/figure 2]</li>
+          <li style="margin-bottom: 0;">[Specific data/figure 3]</li>
+        </ul>
       </div>
     </div>
     
-    <!-- Third Theme -->
-    <div class="theme-section" style="margin-bottom: 20px;">
-      <h3 style="display: flex; align-items: center; font-size: 1.25rem; margin-bottom: 12px; color: #4b5563;">
-        <span style="margin-right: 8px; color: #4f46e5;">🔹</span> [Third theme]
-      </h3>
-      <p style="margin-bottom: 16px; line-height: 1.6;">
-        [Paragraph with <strong>keywords in bold</strong>]
+    <!-- SECOND THEMATIC SECTION -->
+    <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Title of the second thematic section]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraph detailing this section with <strong style="font-weight: 600;">important points in bold</strong>.]
       </p>
-      <!-- Reflection -->
-      <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 12px; margin-bottom: 16px; display: flex; align-items: flex-start;">
-        <span style="margin-right: 8px;">💭</span>
-        <p style="margin: 0; font-style: italic;"><strong>Reflection:</strong> [A relevant thought or advice]</p>
+      
+      <!-- EXAMPLE BOX -->
+      <div style="background-color: #fff8c5; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.95rem;">
+        <p style="margin: 0 0 8px 0; font-weight: 600;">💼 Concrete Example:</p>
+        <p style="margin: 0;">[Description of an example mentioned in the video]</p>
+      </div>
+    </div>
+    
+    <!-- THIRD THEMATIC SECTION -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="font-size: 1.2rem; color: #4f46e5; margin-bottom: 12px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">🔹</span> [Title of the third thematic section]
+      </h4>
+      <p style="margin-bottom: 12px; padding-left: 10px; border-left: 3px solid #e5e7eb;">
+        [Paragraph detailing this section with <strong style="font-weight: 600;">important points in bold</strong>.]
+      </p>
+      
+      <!-- TIP/ADVICE BOX -->
+      <div style="background-color: #e6f7ff; padding: 12px; border-radius: 8px; margin: 15px 0; display: flex; align-items: flex-start; font-size: 0.95rem;">
+        <span style="margin-right: 8px; font-size: 1.2rem;">💡</span>
+        <div>
+          <p style="margin: 0 0 5px 0; font-weight: 600;">Important tip:</p>
+          <p style="margin: 0;">[Tip or advice mentioned in the video]</p>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- Additional Information Section -->
-  <div class="summary-section">
-    <h2 style="display: flex; align-items: center; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+  <!-- ADDITIONAL INFORMATION SECTION -->
+  <div style="margin-bottom: 25px;">
+    <h3 style="font-size: 1.4rem; display: flex; align-items: center; margin-bottom: 15px; color: #333;">
       <span style="margin-right: 8px;">🔗</span> Additional Information
-    </h2>
-    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 16px;">
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>Cited references</strong>: [Concise list]
+    </h3>
+    <ul style="list-style-type: none; padding-left: 0;">
+      <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">Cited references:</strong> [Sources, people, or documents mentioned]
       </li>
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>Recommended resources</strong>: [Concise list]
-      </li>
-      <li style="margin-bottom: 12px; padding-left: 24px; position: relative;">
-        <span style="position: absolute; left: 0;">•</span>
-        <strong>To go further</strong>: [Brief suggestion]
+      <li style="margin-bottom: 10px; padding-left: 25px; position: relative;">
+        <span style="position: absolute; left: 0; color: #4f46e5; font-weight: bold;">•</span>
+        <strong style="font-weight: 600;">To go further:</strong> [Suggestions to explore the topic further]
       </li>
     </ul>
-    <!-- Final Tip -->
-    <div style="background-color: #f0f9ff; padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; align-items: flex-start;">
-      <span style="margin-right: 8px;">🔑</span>
-      <p style="margin: 0;"><strong>Final tip:</strong> [A practical advice]</p>
-    </div>
+  </div>
+  
+  <!-- CONCLUSION SECTION -->
+  <div style="background-color: #f0f9ff; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #0ea5e9;">
+    <p style="margin: 0;">
+      <span style="display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">🔑 Key Takeaway</span>
+      [1-2 sentences summarizing the key points and main teaching of the video]
+    </p>
   </div>
 </div>
 \`\`\`
 
-# SPECIFIC INSTRUCTIONS
-1. Use EXACTLY this HTML structure, replacing only the content in brackets.
-2. Do NOT modify the embedded CSS styles - they are essential for spacing.
-3. Keep the same hierarchy of titles and sections.
-4. Emojis must be kept as visual markers.
-5. Add all necessary key points and themes in the same structure.
-6. Maintain the styles defined as "margin-bottom" and "padding" to ensure spacing.
-7. Respect the original style attributes, do not simplify them.
+# IMPORTANT CONTENT DIRECTIVES
 
-# CONTENT AND STYLE
-- Strictly limit the "In Brief" summary to 2-3 concise sentences.
-- "Key Takeaways" should be clear, each starting with a term in bold.
-- In the "Detailed Summary", create 2-4 main themes, each with a relevant title.
-- For each theme, provide a short paragraph of maximum 2-3 sentences.
-- Highlight key concepts by wrapping them in <strong></strong> tags.
-- Examples, quotes, and reflections are optional - include them only if relevant.
+1. **INTELLIGENT EXTRACTION** - You must identify and extract:
+   - The EXACT subject/theme of the video
+   - Precise factual information (figures, dates, data)
+   - Concrete examples mentioned
+   - Practical tips/advice provided
+   - Key concepts explained
+
+2. **THEMATIC ORGANIZATION** - Structure information by coherent themes:
+   - Adapt section titles to precisely reflect the content
+   - Organize information logically (from general to specific)
+   - Group similar elements in dedicated sections
+   - Ensure each section provides unique value
+
+3. **VISUAL PRESENTATION** - Use visual elements wisely:
+   - Choose relevant emojis for each section/concept
+   - Use colored boxes to highlight special information
+   - Bold important terms and concepts
+   - Use bullet points for enumerations
+
+4. **ADDED VALUE** - Ensure your summary:
+   - Captures the ESSENCE of the video in the quick overview
+   - Clearly presents the most valuable information
+   - Makes content more accessible and digestible
+   - Facilitates understanding of complex concepts
 
 # TRANSCRIPT
 ${transcription}
 
 # IMPORTANT
-Remember that you must generate HTML directly, not Markdown. This approach ensures that spacing and formatting will be preserved exactly as we want.
+- This summary should be understandable WITHOUT having watched the video
+- Focus on CONCRETE INFORMATION rather than opinions
+- Generate only the HTML code, without explanations before or after
+- Check that your HTML code is valid and properly formatted
+- Make sure the summary covers ALL important points of the video
 `;
         }
         
