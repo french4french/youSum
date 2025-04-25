@@ -712,8 +712,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
     /**
-     * Generates and downloads the summary as a PDF document.
-     * Dynamically loads jsPDF if not already available.
+     * Génère et télécharge le résumé sous forme de document PDF.
+     * Version finale avec nettoyage complet des caractères spéciaux et meilleure mise en page.
      */
     function downloadSummary() {
         const noSummaryDownloadText = getText('noSummaryToDownload', 'Aucun résumé à télécharger.');
@@ -722,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const pdfDownloadedText = getText('pdfDownloaded', 'PDF téléchargé !');
         const pdfCreationErrorText = getText('pdfCreationError', 'Erreur lors de la création du PDF.');
         
-        if (!currentSummary || !videoData || currentSummary.includes('<p class="text-red-600">')) { // Don't download errors
+        if (!currentSummary || !videoData || currentSummary.includes('<p class="text-red-600">')) {
             showToast(noSummaryDownloadText, 'error');
             return;
         }
@@ -755,160 +755,356 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-                const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-                const margin = 15;
+                const pageHeight = doc.internal.pageSize.height;
+                const pageWidth = doc.internal.pageSize.width;
+                const margin = 20;
                 const maxLineWidth = pageWidth - margin * 2;
                 let currentY = margin;
                 const lang = languageSelect.value;
-                const unknownText = getText('unknown', 'Inconnue');
                 
-                // --- PDF Content ---
-                doc.setFont('Helvetica'); // Use a standard font
+                // Couleurs
+                const accentColor = [79, 70, 229]; // #4f46e5 - couleur indigo
+                const textColor = [51, 51, 51];    // #333333 - texte principal
+                const subtleColor = [101, 99, 88]; // #656358 - texte secondaire
+                const bgColor = [240, 238, 230];   // #f0eee6 - fond clair
+                const borderColor = [229, 231, 235]; // #e5e7eb - bordures
                 
-                // 1. Video Title
-                doc.setFontSize(16);
-                doc.setFont(undefined, 'bold');
-                const titleLines = doc.splitTextToSize(videoData.title || getText('videoSummary', 'Résumé Vidéo'), maxLineWidth);
-                if (currentY + titleLines.length * 7 > pageHeight - margin) { doc.addPage(); currentY = margin; }
-                doc.text(titleLines, margin, currentY);
-                currentY += (titleLines.length * 7) + 5;
+                // ===== FONCTIONS UTILITAIRES =====
                 
-                // 2. Metadata
+                // Nettoie le texte des caractères spéciaux problématiques
+                function cleanText(text) {
+                    if (!text) return '';
+                    return text
+                        .replace(/[^\x20-\x7E\xA0-\xFF]/g, '') // Enlève tous les caractères non-Latin1 et non-ASCII
+                        .replace(/[Ø=Ýâ]/g, '')               // Enlève spécifiquement les caractères problématiques
+                        .replace(/\s{2,}/g, ' ')               // Remplace les espaces multiples par un seul
+                        .trim();
+                }
+                
+                // Ajoute une nouvelle page si nécessaire
+                function addPageIfNeeded(neededSpace = 15) {
+                    if (currentY + neededSpace >= pageHeight - margin) {
+                        doc.addPage();
+                        currentY = margin;
+                        // En-tête de page
+                        doc.setFontSize(8);
+                        doc.setTextColor(...subtleColor);
+                        const title = cleanText(videoData.title || 'Résumé YouTube');
+                        doc.text(title.substring(0, 60) + (title.length > 60 ? '...' : ''), margin, 10);
+                    }
+                }
+                
+                // Extraire le contenu depuis le HTML
+                function extractContent() {
+                    // Créer un élément temporaire pour parser le HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = currentSummary;
+                    
+                    // Initialiser les données de résultat
+                    const result = {
+                        overview: '',
+                        keyPoints: [],
+                        detailedContent: [],
+                        conclusion: ''
+                    };
+                    
+                    // Extraire le texte nettoyé des paragraphes
+                    const paragraphs = Array.from(tempDiv.querySelectorAll('p')).map(p =>
+                        cleanText(p.textContent)
+                    ).filter(text => text.length > 20);
+                    
+                    // Extraire le texte nettoyé des items de liste
+                    const listItems = Array.from(tempDiv.querySelectorAll('li')).map(li =>
+                        cleanText(li.textContent)
+                    ).filter(text => text.length > 5);
+                    
+                    // Extraire le texte des titres
+                    const headings = Array.from(tempDiv.querySelectorAll('h1, h2, h3, h4')).map(h =>
+                        cleanText(h.textContent)
+                    ).filter(text => text.length > 0);
+                    
+                    // Assigner l'aperçu (premier paragraphe substantiel)
+                    if (paragraphs.length > 0) {
+                        result.overview = paragraphs[0];
+                    }
+                    
+                    // Assigner les points clés
+                    if (listItems.length > 0) {
+                        result.keyPoints = listItems;
+                    }
+                    
+                    // Assigner le contenu détaillé (paragraphes suivants)
+                    if (paragraphs.length > 1) {
+                        result.detailedContent = paragraphs.slice(1);
+                    }
+                    
+                    // Assigner la conclusion (dernier paragraphe s'il est différent)
+                    if (paragraphs.length > 2 && paragraphs[paragraphs.length - 1] !== result.overview) {
+                        result.conclusion = paragraphs[paragraphs.length - 1];
+                    }
+                    
+                    return result;
+                }
+                
+                // ===== DÉBUT DU DOCUMENT =====
+                
+                // 1. TITRE ET LOGO
+                doc.setFontSize(22);
+                doc.setTextColor(...accentColor);
+                doc.setFont('helvetica', 'bold');
+                doc.text("YouSummarize", margin, currentY);
+                
+                // Date alignée à droite
+                doc.setFontSize(9);
+                doc.setTextColor(...subtleColor);
+                doc.setFont('helvetica', 'normal');
+                const dateText = getText('summaryGeneratedOn', 'Résumé généré le') + ' ' + formatDate(new Date());
+                const dateWidth = doc.getTextWidth(dateText);
+                doc.text(dateText, pageWidth - margin - dateWidth, currentY);
+                
+                currentY += 5;
+                
+                // Ligne de séparation
+                doc.setDrawColor(...borderColor);
+                doc.setLineWidth(0.5);
+                doc.line(margin, currentY, pageWidth - margin, currentY);
+                
+                currentY += 10;
+                
+                // 2. INFORMATIONS DE LA VIDÉO
+                doc.setFillColor(...bgColor);
+                const infoBoxHeight = 35;
+                doc.roundedRect(margin, currentY, maxLineWidth, infoBoxHeight, 2, 2, 'F');
+                
+                // Titre vidéo (limité à 2 lignes)
+                doc.setFontSize(14);
+                doc.setTextColor(...textColor);
+                doc.setFont('helvetica', 'bold');
+                const videoTitle = cleanText(videoData.title || getText('videoSummary', 'Résumé Vidéo'));
+                const titleLines = doc.splitTextToSize(videoTitle, maxLineWidth - 6);
+                const displayLines = titleLines.slice(0, 2);
+                doc.text(displayLines, margin + 3, currentY + 7);
+                
+                currentY += 15;
+                
+                // Informations en 2 colonnes
                 doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(100);
+                doc.setTextColor(...subtleColor);
+                doc.setFont('helvetica', 'normal');
                 
-                const metadata = [
-                    `URL: https://www.youtube.com/watch?v=${currentVideoId}`,
-                    `${getText('channel', 'Chaîne')}: ${videoData.channelTitle || unknownText}`,
-                    `${getText('published', 'Publié')}: ${formatDate(videoData.publishedAt)}`,
-                    `${getText('duration', 'Durée')}: ${videoData.duration || unknownText}`,
-                    `${getText('summaryGeneratedOn', 'Résumé généré le')}: ${formatDate(new Date())} (${getText('language', 'Langue')}: ${lang}, ${getText('length', 'Longueur')}: ${getText(`length${capitalize(currentSummaryLength)}`, currentSummaryLength)})`
-                ];
+                // Colonne 1
+                doc.text(`URL: youtube.com/watch?v=${currentVideoId}`, margin + 3, currentY);
+                doc.text(`${getText('published', 'Publié')}: ${formatDate(videoData.publishedAt)}`, margin + 3, currentY + 5);
                 
-                metadata.forEach(line => {
-                    const metaLines = doc.splitTextToSize(line, maxLineWidth);
-                    const neededHeight = metaLines.length * 4;
-                    if (currentY + neededHeight > pageHeight - margin) { doc.addPage(); currentY = margin; }
-                    doc.text(metaLines, margin, currentY);
-                    currentY += neededHeight + 1; // Add small gap
-                });
+                // Colonne 2
+                const colWidth = maxLineWidth / 2;
+                doc.text(`${getText('channel', 'Chaîne')}: ${videoData.channelTitle || ''}`, margin + colWidth, currentY);
+                doc.text(`${getText('duration', 'Durée')}: ${videoData.duration || ''}`, margin + colWidth, currentY + 5);
                 
-                currentY += 5; // Extra space before summary
-                doc.setTextColor(0); // Reset text color
+                // Paramètres en bas
+                currentY += 15;
+                doc.setFontSize(9);
+                const languageName = lang === 'fr' ? 'français' : (lang === 'es' ? 'español' : 'english');
+                const lengthText = getText(`length${capitalize(currentSummaryLength)}`, currentSummaryLength);
+                doc.text(`Langue: ${languageName} • Longueur: ${lengthText}`, margin + 3, currentY);
                 
-                // 3. Summary Content
-                const summaryContainer = document.createElement('div');
-                summaryContainer.innerHTML = currentSummary; // Parse the HTML
+                currentY += 15;
                 
-                function addContentToPdf(element, currentIndent = 0, currentStyle = { size: 11, style: 'normal', color: [0, 0, 0], font: 'Helvetica' }) {
-                    const neededSpace = currentStyle.size * 0.5; // Estimate space needed
-                    if (currentY > pageHeight - margin - neededSpace) {
-                        doc.addPage(); currentY = margin;
-                        doc.setFont(currentStyle.font, currentStyle.style); // Reset font on new page
-                        doc.setFontSize(currentStyle.size);
-                        doc.setTextColor(...currentStyle.color);
-                    }
+                // 3. EXTRAIRE LE CONTENU
+                const content = extractContent();
+                
+                // 4. APERÇU RAPIDE
+                addPageIfNeeded(30);
+                
+                // Titre de section
+                doc.setFontSize(14);
+                doc.setTextColor(...accentColor);
+                doc.setFont('helvetica', 'bold');
+                doc.text(getText('quickOverview', 'Aperçu Rapide'), margin, currentY);
+                
+                currentY += 8;
+                
+                // Boîte d'aperçu avec bordure gauche accentuée
+                if (content.overview) {
+                    // Créer un rectangle avec bordure gauche spéciale
+                    doc.setFillColor(248, 250, 252); // #f8fafc
+                    const overviewLines = doc.splitTextToSize(content.overview, maxLineWidth - 6);
+                    const overviewHeight = Math.min(overviewLines.length * 5 + 10, 40);
                     
-                    let elementStyle = { ...currentStyle }; // Inherit style
-                    let elementMargin = 0;
-                    let listPrefix = '';
-                    let currentX = margin + currentIndent;
+                    doc.roundedRect(margin, currentY, maxLineWidth, overviewHeight, 2, 2, 'F');
+                    doc.setDrawColor(...accentColor);
+                    doc.setLineWidth(3);
+                    doc.line(margin, currentY, margin, currentY + overviewHeight);
                     
-                    switch (element.tagName) {
-                        case 'H1': elementStyle.size = 14; elementStyle.style = 'bold'; elementMargin = 4; break;
-                        case 'H2': elementStyle.size = 13; elementStyle.style = 'bold'; elementMargin = 3; break;
-                        case 'H3': elementStyle.size = 12; elementStyle.style = 'bold'; elementMargin = 2; break;
-                        case 'STRONG': case 'B': elementStyle.style = 'bold'; break;
-                        case 'EM': case 'I': elementStyle.style = 'italic'; break;
-                        case 'P': elementMargin = 2; break;
-                        case 'LI': listPrefix = '• '; elementMargin = 1; break;
-                        case 'BLOCKQUOTE': currentIndent += 5; currentX = margin + currentIndent; elementStyle.color = [100, 100, 100]; elementMargin = 2; break;
-                        case 'HR':
-                            if (currentY + 4 > pageHeight - margin) { doc.addPage(); currentY = margin; }
-                            doc.setDrawColor(150); doc.line(margin, currentY + 2, pageWidth - margin, currentY + 2); currentY += 4; return;
-                        case 'A': elementStyle.color = [0, 0, 255]; break; // Basic link styling
-                        case 'CODE': elementStyle.font = 'Courier'; elementStyle.size = 10; break; // Inline code
-                        case 'PRE': // Code Block
-                            if (currentY + 10 > pageHeight - margin) { doc.addPage(); currentY = margin; }
-                            elementStyle.font = 'Courier'; elementStyle.size = 9;
-                            const preText = element.textContent || '';
-                            const preLines = doc.splitTextToSize(preText, maxLineWidth - currentIndent - 2); // Allow padding
-                            const preHeight = preLines.length * (elementStyle.size * 0.35) + 4; // Estimate height + padding
-                            if (currentY + preHeight > pageHeight - margin) { doc.addPage(); currentY = margin; }
-                            doc.setFillColor(240, 240, 240);
-                            doc.rect(currentX, currentY, maxLineWidth - currentIndent, preHeight, 'F'); // Background
-                            doc.setFont(elementStyle.font, 'normal'); doc.setFontSize(elementStyle.size); doc.setTextColor(0);
-                            doc.text(preLines, currentX + 1, currentY + elementStyle.size * 0.35); // Add text
-                            currentY += preHeight + 3;
-                            return; // Handled pre block
-                    }
+                    // Texte de l'aperçu
+                    doc.setFontSize(10);
+                    doc.setTextColor(...textColor);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(overviewLines, margin + 5, currentY + 5);
                     
-                    currentY += elementMargin;
-                    doc.setFont(elementStyle.font, elementStyle.style);
-                    doc.setFontSize(elementStyle.size);
-                    doc.setTextColor(...elementStyle.color);
-                    
-                    // Process child nodes recursively or text content directly
-                    if (element.childNodes && element.childNodes.length > 0 && element.tagName !== 'PRE' && element.tagName !== 'CODE') {
-                        element.childNodes.forEach(child => {
-                            if (child.nodeType === Node.ELEMENT_NODE) {
-                                addContentToPdf(child, currentIndent, elementStyle); // Pass current style and indent
-                            } else if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
-                                processTextNode(child.textContent, currentX, listPrefix, maxLineWidth - currentIndent, elementStyle);
-                            }
-                        });
-                    } else if (element.textContent && element.tagName !== 'PRE') {
-                        // Handle simple elements or leaf nodes with text
-                        processTextNode(element.textContent, currentX, listPrefix, maxLineWidth - currentIndent, elementStyle, element.tagName === 'A' ? element.href : null);
-                    }
+                    currentY += overviewHeight + 15;
                 }
                 
-                function processTextNode(text, x, prefix, availableWidth, style, linkUrl = null) {
-                    const fullText = prefix + text.trim() + (linkUrl ? ` (${linkUrl})` : '');
-                    if (!fullText) return;
+                // 5. POINTS CLÉS
+                if (content.keyPoints && content.keyPoints.length > 0) {
+                    addPageIfNeeded(15);
                     
-                    const lines = doc.splitTextToSize(fullText, availableWidth - (prefix ? 3 : 0));
-                    const neededHeight = lines.length * (style.size * 0.35) + 1;
+                    // Titre de section
+                    doc.setFontSize(14);
+                    doc.setTextColor(...accentColor);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(getText('keyPoints', 'Points Clés'), margin, currentY);
                     
-                    if (currentY + neededHeight > pageHeight - margin) {
-                        doc.addPage(); currentY = margin;
-                        // Reset font/style/color on new page
-                        doc.setFont(style.font, style.style);
-                        doc.setFontSize(style.size);
-                        doc.setTextColor(...style.color);
-                    }
-                    // Set styles again before text (might have changed due to page break/other elements)
-                    doc.setFont(style.font, style.style);
-                    doc.setFontSize(style.size);
-                    doc.setTextColor(...style.color);
+                    currentY += 8;
                     
-                    doc.text(lines, x + (prefix ? 3 : 0), currentY);
-                    currentY += neededHeight;
+                    // Afficher chaque point clé
+                    content.keyPoints.forEach((point, index) => {
+                        addPageIfNeeded(12);
+                        
+                        // Déterminer si le point contient un titre
+                        let title = '';
+                        let description = point;
+                        
+                        if (point.includes(':')) {
+                            const parts = point.split(':');
+                            title = parts[0].trim();
+                            description = parts.slice(1).join(':').trim();
+                        }
+                        
+                        // Dessiner le point
+                        doc.setFillColor(...accentColor);
+                        doc.circle(margin + 2, currentY - 2, 1, 'F');
+                        
+                        if (title && description) {
+                            // Point avec titre: formater en deux parties
+                            doc.setFontSize(10);
+                            doc.setTextColor(...textColor);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(title + ':', margin + 6, currentY);
+                            
+                            currentY += 5;
+                            
+                            doc.setFont('helvetica', 'normal');
+                            const descLines = doc.splitTextToSize(description, maxLineWidth - 10);
+                            doc.text(descLines, margin + 6, currentY);
+                            
+                            currentY += descLines.length * 5 + 3;
+                        } else {
+                            // Point simple
+                            doc.setFontSize(10);
+                            doc.setTextColor(...textColor);
+                            doc.setFont('helvetica', 'normal');
+                            
+                            const lines = doc.splitTextToSize(point, maxLineWidth - 10);
+                            doc.text(lines, margin + 6, currentY);
+                            
+                            currentY += lines.length * 5 + 3;
+                        }
+                    });
+                    
+                    currentY += 7;
                 }
                 
-                // Start processing the summary container's children
-                summaryContainer.childNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        addContentToPdf(node, 0); // Start with 0 indent and default style
-                    } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-                        // Handle top-level text nodes (wrap in pseudo-P element)
-                        addContentToPdf({ tagName: 'P', textContent: node.textContent }, 0);
-                    }
-                });
+                // 6. CONTENU DÉTAILLÉ
+                if (content.detailedContent && content.detailedContent.length > 0) {
+                    addPageIfNeeded(15);
+                    
+                    // Titre de section
+                    doc.setFontSize(14);
+                    doc.setTextColor(...accentColor);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(getText('detailedContent', 'Contenu Détaillé'), margin, currentY);
+                    
+                    currentY += 8;
+                    
+                    // Afficher chaque paragraphe du contenu détaillé
+                    content.detailedContent.forEach((paragraph, index) => {
+                        // Sauter l'aperçu s'il est déjà inclus
+                        if (paragraph === content.overview) return;
+                        
+                        addPageIfNeeded(15);
+                        
+                        // Dessiner la bordure de gauche
+                        doc.setDrawColor(...borderColor);
+                        doc.setLineWidth(1);
+                        doc.line(margin + 3, currentY, margin + 3, currentY + 15);
+                        
+                        // Ajouter le texte
+                        doc.setFontSize(10);
+                        doc.setTextColor(...textColor);
+                        doc.setFont('helvetica', 'normal');
+                        
+                        const paraLines = doc.splitTextToSize(paragraph, maxLineWidth - 8);
+                        doc.text(paraLines, margin + 8, currentY);
+                        
+                        currentY += paraLines.length * 5 + 10;
+                    });
+                } else {
+                    addPageIfNeeded(15);
+                    
+                    // Titre de section
+                    doc.setFontSize(14);
+                    doc.setTextColor(...accentColor);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(getText('detailedContent', 'Contenu Détaillé'), margin, currentY);
+                    
+                    currentY += 8;
+                    
+                    // Message quand aucun contenu détaillé n'est disponible
+                    doc.setFontSize(10);
+                    doc.setTextColor(...subtleColor);
+                    doc.setFont('helvetica', 'italic');
+                    doc.text(getText('noDetailedContentAvailable', 'Aucun contenu détaillé disponible.'), margin, currentY);
+                    
+                    currentY += 10;
+                }
                 
-                // 4. Footer (Page Numbers)
+                // 7. CONCLUSION / ESSENTIEL À RETENIR
+                if (content.conclusion) {
+                    addPageIfNeeded(25);
+                    
+                    // Encadré de conclusion avec couleur spéciale
+                    doc.setFillColor(240, 249, 255); // #f0f9ff - bleu très clair
+                    doc.setDrawColor(14, 165, 233);  // #0ea5e9 - bleu
+                    
+                    const conclusionLines = doc.splitTextToSize(content.conclusion, maxLineWidth - 10);
+                    const conclusionHeight = conclusionLines.length * 5 + 15;
+                    
+                    // Rectangle avec bordure gauche en couleur
+                    doc.roundedRect(margin, currentY, maxLineWidth, conclusionHeight, 2, 2, 'F');
+                    doc.setLineWidth(3);
+                    doc.line(margin, currentY, margin, currentY + conclusionHeight);
+                    
+                    // Titre "L'essentiel à retenir"
+                    doc.setFontSize(12);
+                    doc.setTextColor(14, 165, 233); // Bleu (#0ea5e9)
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(getText('keyTakeaway', 'L\'essentiel à retenir'), margin + 5, currentY + 7);
+                    
+                    // Texte de conclusion
+                    doc.setFontSize(10);
+                    doc.setTextColor(...textColor);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(conclusionLines, margin + 5, currentY + 14);
+                    
+                    currentY += conclusionHeight + 5;
+                }
+                
+                // 8. NUMÉROS DE PAGE
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
                     doc.setFontSize(9);
-                    doc.setTextColor(150);
-                    doc.text(`${getText('page', 'Page')} ${i} / ${pageCount} - YouSummarize`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
+                    doc.setTextColor(...subtleColor);
+                    doc.text(`Page ${i} / ${pageCount} - YouSummarize`, pageWidth / 2, pageHeight - 10, { align: 'center' });
                 }
                 
-                // 5. Save
-                const safeTitle = (videoData.title || 'youtube-summary').replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 40);
+                // 9. SAUVEGARDE
+                const safeTitle = (videoData.title || 'youtube-summary')
+                    .replace(/[^a-z0-9]/gi, '_')
+                    .toLowerCase()
+                    .substring(0, 40);
+                
                 doc.save(`YouSummarize_${safeTitle}.pdf`);
                 showToast(pdfDownloadedText, 'success');
                 
