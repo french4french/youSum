@@ -129,10 +129,13 @@
     </style>
 </head>
 <body class="text-main">
+
+
 <div class="shadow-lg bg-card m-2 rounded-2xl relative">
     <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
 
         <!-- Navigation with Buy Me a Coffee Button -->
+        <!-- Navigation with grouped buttons -->
         <nav class="w-full flex justify-between items-center mb-10 md:mb-16">
             <div class="flex gap-2 items-center">
                 <!-- Logo avec dimensions explicites et srcset -->
@@ -144,10 +147,46 @@
                 </a>
             </div>
 
-            <!-- Bouton Buy Me a Coffee -->
-            <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy Me a Café', '#4f46e5', 'G2G81E1I3Q');kofiwidget2.draw();</script>
-            <!-- Fin du Bouton Buy Me a Coffee -->
+            <!-- Groupe de boutons à droite -->
+            <div class="flex items-center gap-2">
+                <!-- Bouton Partager -->
+                <div class="relative inline-block">
+                    <button id="shareOptionsBtn" class="px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover:bg-[#E9E5D8] border border-subtle shadow-sm w-fit text-sm transition duration-150">
+                        <i class="fas fa-share-alt text-subtle"></i>
+                        <span class="py-0 shrink-0 font-medium text-subtle">Partager</span>
+                    </button>
 
+                    <!-- Menu déroulant de partage -->
+                    <div id="shareMenu" class="absolute right-0 mt-1 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-10 hidden">
+                        <div class="py-1">
+                            <button id="copyLinkBtn" class="group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left">
+                                <i class="far fa-copy mr-3 text-subtle"></i>
+                                Copier le lien
+                            </button>
+                            <button id="addBookmarkBtn" class="group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left">
+                                <i class="far fa-bookmark mr-3 text-subtle"></i>
+                                Ajouter aux favoris (Ctrl+D)
+                            </button>
+                            <button id="shareWhatsappBtn" class="group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left">
+                                <i class="fab fa-whatsapp mr-3 text-green-600"></i>
+                                Partager via WhatsApp
+                            </button>
+                            <button id="shareTwitterBtn" class="group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left">
+                                <i class="fab fa-twitter mr-3 text-blue-400"></i>
+                                Partager sur X
+                            </button>
+                            <button id="shareFacebookBtn" class="group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left">
+                                <i class="fab fa-facebook mr-3 text-blue-600"></i>
+                                Partager sur Facebook
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bouton Buy Me a Coffee -->
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script type='text/javascript'>kofiwidget2.init('Buy Me a Café', '#4f46e5', 'G2G81E1I3Q');kofiwidget2.draw();</script>
+            </div>
         </nav>
 
         <main class="flex flex-col w-full max-w-full gap-12 md:gap-16 items-center my-auto">
@@ -408,10 +447,14 @@
         <footer class="border-t border-subtle/50 pt-8 pb-6 mt-12 lg:mt-16 text-xs text-subtle">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1">
+
                     <span>© <span id="currentYear">2025</span> YouSummarize</span>
                     <span class="hidden sm:inline">·</span>
                     <span>par <a href="https://github.com/jp-fix" target="_blank" rel="noopener noreferrer external" class="hover:text-main font-medium">jp-fix</a></span>
+
                     <span class="hidden sm:inline">·</span>
+                    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                    <script type='text/javascript'>kofiwidget2.init('Buy Me a Café', '#4f46e5', 'G2G81E1I3Q');kofiwidget2.draw();</script>
                 </div>
                 <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end mt-2 sm:mt-0">
                     <a href="./api-docs.html" class="hover:text-main transition">Documentation API</a>

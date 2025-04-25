@@ -3,6 +3,95 @@
  * Core client-side logic for fetching video info, transcription,
  * generating summaries, and handling UI interactions.
  */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const shareOptionsBtn = document.getElementById('shareOptionsBtn');
+    const shareMenu = document.getElementById('shareMenu');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+    const shareWhatsappBtn = document.getElementById('shareWhatsappBtn');
+    const shareTwitterBtn = document.getElementById('shareTwitterBtn');
+    const shareFacebookBtn = document.getElementById('shareFacebookBtn');
+    const copyToast = document.getElementById('copyToast');
+    
+    // Afficher/masquer le menu
+    shareOptionsBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        shareMenu.classList.toggle('hidden');
+    });
+    
+    // Fermer le menu si on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (!shareOptionsBtn.contains(e.target) && !shareMenu.contains(e.target)) {
+            shareMenu.classList.add('hidden');
+        }
+    });
+    
+    // Fonction pour copier le lien
+    copyLinkBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            // Afficher le toast
+            copyToast.classList.remove('opacity-0');
+            copyToast.classList.add('opacity-100');
+            
+            // Masquer le toast après 2 secondes
+            setTimeout(function() {
+                copyToast.classList.remove('opacity-100');
+                copyToast.classList.add('opacity-0');
+            }, 2000);
+            
+            // Fermer le menu
+            shareMenu.classList.add('hidden');
+        });
+    });
+    
+    // Fonction pour les favoris
+    addBookmarkBtn.addEventListener('click', function() {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const shortcut = isMac ? '⌘+D' : 'Ctrl+D';
+        alert('Appuyez sur ' + shortcut + ' pour ajouter cette page à vos favoris');
+        shareMenu.classList.add('hidden');
+    });
+    
+    // Fonctions de partage social
+    shareWhatsappBtn.addEventListener('click', function() {
+        window.open('https://wa.me/?text=' + encodeURIComponent(document.title + ' ' + window.location.href));
+        shareMenu.classList.add('hidden');
+    });
+    
+    shareTwitterBtn.addEventListener('click', function() {
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(document.title) + '&url=' + encodeURIComponent(window.location.href));
+        shareMenu.classList.add('hidden');
+    });
+    
+    shareFacebookBtn.addEventListener('click', function() {
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href));
+        shareMenu.classList.add('hidden');
+    });
+    
+    // Utiliser l'API Web Share si disponible (mobile principalement)
+    if (navigator.share) {
+        const nativeShareBtn = document.createElement('button');
+        nativeShareBtn.className = 'group flex items-center px-4 py-2 text-sm text-subtle hover:bg-[#f0eee6] w-full text-left';
+        nativeShareBtn.innerHTML = '<i class="fas fa-share-alt mr-3 text-subtle"></i> Partager (natif)';
+        
+        nativeShareBtn.addEventListener('click', async () => {
+            try {
+                await navigator.share({
+                    title: document.title,
+                    url: window.location.href
+                });
+            } catch (err) {
+                console.error('Erreur lors du partage :', err);
+            }
+            shareMenu.classList.add('hidden');
+        });
+        
+        // Ajouter ce bouton en haut du menu
+        shareMenu.querySelector('.py-1').prepend(nativeShareBtn);
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // --- DOM Element References ---
     const youtubeForm = document.getElementById('youtubeForm');
