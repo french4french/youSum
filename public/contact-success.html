@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Message envoyé - YouSummarize - Votre message a été envoyé avec succès">
+    <title>Message Envoyé | YouSummarize</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./assets/images/favicon.png">
+    <style>
+        :root {
+            --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+            --bg-color: #f0eee6;
+            --card-bg-color: #ffffff;
+            --text-color-main: #333333;
+            --text-color-subtle: #656358;
+            --border-color: #d0cec2;
+            --accent-color: #4f46e5;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-sans);
+            color: var(--text-color-main);
+        }
+        .font-serif { font-family: var(--font-serif); }
+        .bg-card { background-color: var(--card-bg-color); }
+        .border-subtle { border-color: var(--border-color); }
+        .accent { color: var(--accent-color); }
+        .bg-accent { background-color: var(--accent-color); }
+        .text-subtle { color: var(--text-color-subtle); }
+    </style>
+</head>
+<body class="min-h-screen">
+<div class="shadow-lg bg-card m-2 rounded-2xl relative">
+    <div class="min-w-screen min-h-screen p-6 md:p-8 font-sans mx-auto max-w-6xl">
+
+        <!-- Navigation -->
+        <nav class="w-full flex justify-between items-center mb-10 md:mb-16">
+            <a href="./index.html" class="flex gap-2 items-center">
+                <img alt="YouSummarize Logo"
+                     width="200" height="60"
+                     src="./assets/images/logo.webp"
+                />
+            </a>
+            <a href="./index.html" class="px-4 py-2 cursor-pointer flex gap-2 h-[40px] items-center justify-center rounded-xl hover:bg-[#E9E5D8] border border-subtle shadow-sm w-fit text-sm transition duration-150">
+                <i class="fas fa-home text-subtle"></i>
+                <span class="py-0 shrink-0 font-medium text-subtle">Retour à l'accueil</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="mb-16 flex flex-col items-center justify-center">
+            <div class="text-center max-w-lg mx-auto">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-500 mb-6">
+                    <i class="fas fa-check-circle text-4xl"></i>
+                </div>
+
+                <h1 class="font-serif text-3xl md:text-4xl font-bold mb-6">Message Envoyé !</h1>
+
+                <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+                    <p class="text-lg mb-4">Nous avons bien reçu votre message et vous en remercions.</p>
+                    <p>Notre équipe l'examinera dans les plus brefs délais et vous répondra si nécessaire.</p>
+                </div>
+
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <a href="./index.html" class="bg-accent hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg flex items-center gap-2 transition duration-200">
+                        <i class="fas fa-home"></i>
+                        Retour à l'accueil
+                    </a>
+                    <a href="./contact.html" class="border border-subtle hover:bg-[#f0eee6] px-6 py-3 rounded-lg flex items-center gap-2 transition duration-200">
+                        <i class="fas fa-envelope accent"></i>
+                        Nouveau message
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-subtle/50 pt-8 pb-6 mt-12 lg:mt-16 text-xs text-subtle">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex flex-wrap justify-center sm:justify-start items-center gap-x-3 gap-y-1">
+                    <span>© <span id="currentYear">2025</span> YouSummarize</span>
+                    <span class="hidden sm:inline">·</span>
+                    <span>par <a href="https://github.com/jp-fix" target="_blank" rel="noopener noreferrer external" class="hover:text-main font-medium">jp-fix</a></span>
+                    <span class="hidden sm:inline">·</span>
+                </div>
+                <nav class="footer-links flex flex-wrap gap-x-4 gap-y-1 justify-center sm:justify-end mt-2 sm:mt-0">
+                    <a href="./api-docs.html" class="hover:text-main transition">Documentation API</a>
+                    <a href="./privacy.html" class="hover:text-main transition">Confidentialité</a>
+                    <a href="./terms.html" class="hover:text-main transition">Conditions</a>
+                    <a href="./contact.html" class="hover:text-main transition">Contact</a>
+                    <a href="./sitemap.html" class="hover:text-main transition">Plan du site</a>
+                </nav>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

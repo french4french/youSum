@@ -66,6 +66,7 @@
 
             <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 <!-- Contact Form Card -->
+<!--
                 <div class="bg-card p-6 md:p-8 rounded-xl shadow-md border border-subtle">
                     <h2 class="text-xl font-semibold mb-5">Envoyez-nous un message</h2>
 
@@ -108,7 +109,7 @@
                         </button>
                     </form>
 
-                    <!-- Success Message (Hidden by default) -->
+                    &lt;!&ndash; Success Message (Hidden by default) &ndash;&gt;
                     <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
                         <div class="flex items-center">
                             <i class="fas fa-check-circle text-green-500 mr-2"></i>
@@ -116,6 +117,55 @@
                         </div>
                     </div>
                 </div>
+-->
+                <!-- Dans votre fichier contact.html, remplacez la balise form par celle-ci -->
+
+                <form id="contactForm" action="https://formspree.io/f/xgvkvdjb" method="POST" class="space-y-5">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-subtle mb-1">Nom</label>
+                        <input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="Votre nom" required>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-subtle mb-1">Email</label>
+                        <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="votre.email@exemple.com" required>
+                    </div>
+
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-subtle mb-1">Sujet</label>
+                        <select id="subject" name="subject" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white">
+                            <option value="question">Question générale</option>
+                            <option value="feedback">Commentaire ou suggestion</option>
+                            <option value="bug">Signaler un problème</option>
+                            <option value="business">Opportunité commerciale</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-subtle mb-1">Message</label>
+                        <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-lg border border-subtle bg-white" placeholder="Détaillez votre message ici..." required></textarea>
+                    </div>
+
+                    <div class="flex items-start mb-2">
+                        <input type="checkbox" id="privacy" name="privacy" class="mt-1" required>
+                        <label for="privacy" class="ml-2 text-xs text-subtle">
+                            J'accepte que mes données soient traitées conformément à la <a href="/privacy" class="text-accent hover:underline">politique de confidentialité</a>.
+                        </label>
+                    </div>
+
+                    <!-- Ajout champ caché pour reCAPTCHA optionnel -->
+                    <input type="hidden" name="_gotcha" style="display:none" />
+
+                    <!-- Redirection après envoi -->
+                    <input type="hidden" name="_next" value="https://resumemavideo.fr/contact-success.html" />
+
+                    <button type="submit" class="w-full bg-accent hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-paper-plane mr-2"></i> Envoyer le message
+                    </button>
+                </form>
+
+                <!-- Note: Vous devez créer une page contact-success.html ou modifier l'URL _next ci-dessus -->
 
                 <!-- Contact Info Card -->
                 <div class="space-y-6">
