@@ -150,7 +150,7 @@
                     <div class="flex items-start mb-2">
                         <input type="checkbox" id="privacy" name="privacy" class="mt-1" required>
                         <label for="privacy" class="ml-2 text-xs text-subtle">
-                            J'accepte que mes données soient traitées conformément à la <a href="/privacy" class="text-accent hover:underline">politique de confidentialité</a>.
+                            J'accepte que mes données soient traitées conformément à la <a href="./privacy.html" class="text-accent hover:underline">politique de confidentialité</a>.
                         </label>
                     </div>
 
@@ -249,40 +249,8 @@
 </div>
 
 <script>
+    // Gardez uniquement ce script pour l'année en cours
     document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-    // Gestion du formulaire de contact
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        // Ici, vous pourriez ajouter le code pour envoyer les données du formulaire à votre backend
-        // Pour l'instant, nous affichons simplement le message de succès
-        document.getElementById('contactForm').classList.add('hidden');
-        document.getElementById('successMessage').classList.remove('hidden');
-
-        // En fonction de votre implémentation, vous pourriez remplacer cette partie par un appel API
-        // fetch('/api/contact', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({
-        //         name: document.getElementById('name').value,
-        //         email: document.getElementById('email').value,
-        //         subject: document.getElementById('subject').value,
-        //         message: document.getElementById('message').value,
-        //     })
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     document.getElementById('contactForm').classList.add('hidden');
-        //     document.getElementById('successMessage').classList.remove('hidden');
-        // })
-        // .catch(error => {
-        //     console.error('Error:', error);
-        //     alert('Une erreur est survenue. Veuillez réessayer plus tard.');
-        // });
-    });
 </script>
 </body>
 </html>
