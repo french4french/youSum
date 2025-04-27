@@ -2,43 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://resumemavideo.fr/index.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/privacy.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/terms.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/contact.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/sitemap.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/api-docs.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
     <url>
         <loc>https://resumemavideo.fr/404.html</loc>
-        <lastmod>2025-04-24</lastmod>
+        <lastmod>2025-04-26</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.1</priority>
     </url>
